@@ -9,6 +9,10 @@ Flutter app skeleton following `架构.md`.
 - `lib/features`: feature-first modules with `data`, `domain`, and `presentation` layers
 
 ## Development
+chrome  启动命令
+```
+flutter run -d chrome --web-port=8080 --dart-define-from-file=config/test.env
+````
 
 ```bash
 flutter pub get

@@ -1,12 +1,21 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/session_controller.dart';
 import '../../../auth/domain/auth_models.dart';
+import '../../../spirit/presentation/providers/spirit_controller.dart';
 import '../../data/wish_pool_repository.dart';
 import '../../domain/models/kitchen_models.dart';
 
 final wishPoolControllerProvider =
     NotifierProvider<WishPoolController, WishPoolState>(WishPoolController.new);
+
+final wishPoolRepositoryProvider =
+    Provider.family<WishPoolRepository, String?>((ref, token) {
+  return WishPoolRepository(token: token);
+});
 
 class WishPoolState {
   const WishPoolState({
@@ -19,6 +28,9 @@ class WishPoolState {
     this.creatorFilter = WishCreatorFilter.all,
     this.dishQuery = '',
     this.dishFilters = const DishFilters(),
+    this.isLoading = false,
+    this.isRefreshing = false,
+    this.errorMessage,
   });
 
   final List<AppUser> users;
@@ -30,6 +42,9 @@ class WishPoolState {
   final WishCreatorFilter creatorFilter;
   final String dishQuery;
   final DishFilters dishFilters;
+  final bool isLoading;
+  final bool isRefreshing;
+  final String? errorMessage;
 
   AppUser get me => users.firstWhere((user) => user.isMe);
   AppUser get partner => users.firstWhere((user) => !user.isMe);
@@ -58,6 +73,9 @@ class WishPoolState {
     WishCreatorFilter? creatorFilter,
     String? dishQuery,
     DishFilters? dishFilters,
+    bool? isLoading,
+    bool? isRefreshing,
+    Object? errorMessage = _unchanged,
   }) {
     return WishPoolState(
       users: users ?? this.users,
@@ -71,6 +89,11 @@ class WishPoolState {
       creatorFilter: creatorFilter ?? this.creatorFilter,
       dishQuery: dishQuery ?? this.dishQuery,
       dishFilters: dishFilters ?? this.dishFilters,
+      isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      errorMessage: identical(errorMessage, _unchanged)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 }
@@ -84,9 +107,9 @@ class WishPoolController extends Notifier<WishPoolState> {
   @override
   WishPoolState build() {
     final session = ref.watch(sessionControllerProvider).valueOrNull;
-    _repository = WishPoolRepository(token: session?.token);
+    _repository = ref.watch(wishPoolRepositoryProvider(session?.token));
     Future.microtask(_loadRemoteSnapshot);
-    return _seedState(
+    return _emptyState(
       meId: session?.user?.id ?? 'me',
       meName: session?.user?.nickname ?? '我',
       meGender: session?.user?.gender ?? UserGender.unspecified,
@@ -97,7 +120,7 @@ class WishPoolController extends Notifier<WishPoolState> {
     );
   }
 
-  WishPoolState _seedState({
+  WishPoolState _emptyState({
     required String meId,
     required String meName,
     required UserGender meGender,
@@ -105,7 +128,6 @@ class WishPoolController extends Notifier<WishPoolState> {
     required String partnerName,
     required UserGender partnerGender,
   }) {
-    final now = DateTime.now();
     final users = [
       AppUser(id: meId, nickname: meName, isMe: true, gender: meGender),
       AppUser(
@@ -117,110 +139,34 @@ class WishPoolController extends Notifier<WishPoolState> {
 
     return WishPoolState(
       users: users,
-      kitchenStatuses: {
-        meId: KitchenStatusEntry(
-          userId: meId,
-          status: KitchenStatusValue.normal,
-          note: '今天正常做饭',
-        ),
-        partnerId: KitchenStatusEntry(
-          userId: partnerId,
-          status: KitchenStatusValue.tired,
-          note: '她今天有点累，适合简单点',
-        ),
-      },
-      wishes: [
-        Wish(
-          id: _nextId('wish'),
-          creatorId: partnerId,
-          title: '可乐鸡翅',
-          wishType: 'DISH',
-          feelingTags: const [],
-          desiredTime: '今晚',
-          intensity: '今天特别想吃',
-          substituteOption: '可以做轻松版',
-          helperTasks: const ['洗菜', '饭后收桌'],
-          status: WishStatus.inPool,
-          createdAt: now,
-          updatedAt: now,
-          responses: const [],
-        ),
-        Wish(
-          id: _nextId('wish'),
-          creatorId: meId,
-          title: '今晚想喝汤',
-          wishType: 'FEELING',
-          feelingTags: const ['有汤', '热乎一点'],
-          desiredTime: '这周',
-          intensity: '这周想吃',
-          substituteOption: '家里有什么就做什么',
-          helperTasks: const ['洗碗'],
-          status: WishStatus.inPool,
-          createdAt: now,
-          updatedAt: now,
-          responses: const [],
-        ),
-      ],
+      kitchenStatuses: const {},
+      wishes: const [],
       fulfillments: const [],
-      dishes: [
-        HomeDish(
-          id: _nextId('dish'),
-          name: '番茄鸡蛋面',
-          cookOwner: meId,
-          suitableTimeTags: const ['今晚', '快手'],
-          difficulty: '简单',
-          tasteTags: const ['热乎', '快手'],
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ],
+      dishes: const [],
     );
   }
 
   Future<void> _loadRemoteSnapshot() async {
     try {
-      final session = ref.read(sessionControllerProvider).valueOrNull;
-      final snapshot = await _repository.fetchSnapshot(
-        me: session?.user,
-        partner: session?.binding.partner,
-        creatorFilter: state.creatorFilter,
-        statusFilter: state.selectedStatus,
-        dishQuery: state.dishQuery,
-        dishFilters: state.dishFilters,
-      );
-      state = state.copyWith(
-        users: snapshot.users.isEmpty ? state.users : snapshot.users,
-        wishes: snapshot.wishes,
-        kitchenStatuses: snapshot.kitchenStatuses,
-        fulfillments: snapshot.fulfillments,
-        dishes: snapshot.dishes,
-      );
-    } catch (_) {
-      // Keep the local seed data available when the API is not running.
+      state = state.copyWith(isLoading: true, errorMessage: null);
+      final snapshot = await _fetchSnapshot();
+      _applySnapshot(snapshot, isLoading: false);
+    } catch (error) {
+      _handleFailure(error, fallback: state.copyWith(isLoading: false));
     }
   }
 
-  Future<void> _refreshRemote() async {
+  Future<void> retry() => _loadRemoteSnapshot();
+
+  Future<void> _refreshRemote({bool showRefreshing = true}) async {
     try {
-      final session = ref.read(sessionControllerProvider).valueOrNull;
-      final snapshot = await _repository.fetchSnapshot(
-        me: session?.user,
-        partner: session?.binding.partner,
-        creatorFilter: state.creatorFilter,
-        statusFilter: state.selectedStatus,
-        dishQuery: state.dishQuery,
-        dishFilters: state.dishFilters,
-      );
-      state = state.copyWith(
-        users: snapshot.users.isEmpty ? state.users : snapshot.users,
-        wishes: snapshot.wishes,
-        kitchenStatuses: snapshot.kitchenStatuses,
-        fulfillments: snapshot.fulfillments,
-        dishes: snapshot.dishes,
-      );
-    } catch (_) {
-      // The optimistic local update remains visible if the refresh fails.
+      if (showRefreshing) {
+        state = state.copyWith(isRefreshing: true, errorMessage: null);
+      }
+      final snapshot = await _fetchSnapshot();
+      _applySnapshot(snapshot, isRefreshing: false);
+    } catch (error) {
+      _handleFailure(error, fallback: state.copyWith(isRefreshing: false));
     }
   }
 
@@ -275,19 +221,21 @@ class WishPoolController extends Notifier<WishPoolState> {
       updatedAt: now,
       responses: const [],
     );
+    final previous = state;
     state = state.copyWith(wishes: [wish, ...state.wishes]);
-    _repository
-        .createWish(
-          title: title,
-          wishType: wishType,
-          feelingTags: feelingTags,
-          desiredTime: desiredTime,
-          intensity: intensity,
-          substituteOption: substituteOption,
-          helperTasks: helperTasks,
-        )
-        .then((_) => _refreshRemote())
-        .catchError((_) {});
+    _runWrite(previous, () async {
+      await _repository.createWish(
+        title: title,
+        wishType: wishType,
+        feelingTags: feelingTags,
+        desiredTime: desiredTime,
+        intensity: intensity,
+        substituteOption: substituteOption,
+        helperTasks: helperTasks,
+      );
+      await _refreshRemote(showRefreshing: false);
+      await _refreshSpirit();
+    });
     return wish;
   }
 
@@ -296,6 +244,7 @@ class WishPoolController extends Notifier<WishPoolState> {
     if (wish.status == WishStatus.fulfilled) {
       throw StateError('已兑现的愿望不能删除');
     }
+    final previous = state;
     state = state.copyWith(
       wishes: [
         for (final item in state.wishes)
@@ -304,14 +253,21 @@ class WishPoolController extends Notifier<WishPoolState> {
     );
     _repository
         .deleteWish(wishId)
-        .then((_) => _refreshRemote())
-        .catchError((_) {});
+        .then((_) => _refreshRemote(showRefreshing: false))
+        .catchError(
+            (Object error) => _handleFailure(error, fallback: previous));
   }
 
   Future<Wish> refreshWish(String wishId) async {
-    final wish = await _repository.fetchWish(wishId);
-    _replaceWish(wish);
-    return wish;
+    try {
+      final wish = await _repository.fetchWish(wishId);
+      _replaceWish(wish);
+      state = state.copyWith(errorMessage: null);
+      return wish;
+    } catch (error) {
+      _handleFailure(error, fallback: state);
+      rethrow;
+    }
   }
 
   Wish respondToWish({
@@ -351,18 +307,24 @@ class WishPoolController extends Notifier<WishPoolState> {
       responses: [...wish.responses, response],
     );
 
+    final previous = state;
     _replaceWish(updated);
-    _repository
-        .respondToWish(
+    _runWrite(
+      previous,
+      () async {
+        final saved = await _repository.respondToWish(
           wishId: wishId,
           type: type,
           proposedTitle: proposedTitle,
           proposedTime: proposedTime,
           reasonTags: reasonTags,
           reasonText: reasonText,
-        )
-        .then((wish) => _replaceWish(wish))
-        .catchError((_) {});
+        );
+        _replaceWish(saved);
+        state = state.copyWith(errorMessage: null);
+        await _refreshSpirit();
+      },
+    );
     return updated;
   }
 
@@ -388,11 +350,17 @@ class WishPoolController extends Notifier<WishPoolState> {
       updatedAt: DateTime.now(),
       responses: responses,
     );
+    final previous = state;
     _replaceWish(updated);
-    _repository
-        .confirmResponse(current.id)
-        .then((wish) => _replaceWish(wish))
-        .catchError((_) {});
+    _runWrite(
+      previous,
+      () async {
+        final saved = await _repository.confirmResponse(current.id);
+        _replaceWish(saved);
+        state = state.copyWith(errorMessage: null);
+        await _refreshSpirit();
+      },
+    );
     return updated;
   }
 
@@ -410,11 +378,16 @@ class WishPoolController extends Notifier<WishPoolState> {
       currentResponseId: null,
       updatedAt: DateTime.now(),
     );
+    final previous = state;
     _replaceWish(updated);
-    _repository
-        .reopenResponse(current.id)
-        .then((wish) => _replaceWish(wish))
-        .catchError((_) {});
+    _runWrite(
+      previous,
+      () async {
+        final saved = await _repository.reopenResponse(current.id);
+        _replaceWish(saved);
+        state = state.copyWith(errorMessage: null);
+      },
+    );
     return updated;
   }
 
@@ -426,6 +399,7 @@ class WishPoolController extends Notifier<WishPoolState> {
     List<String> feedbackTags = const [],
     String? note,
     bool addToDishes = false,
+    String? imageUrl,
   }) {
     final wish = wishById(wishId);
     if (!_canFulfill(wish.status)) {
@@ -453,11 +427,12 @@ class WishPoolController extends Notifier<WishPoolState> {
     ];
     final nextDishes = addToDishes
         ? [
-            _dishFromFulfillment(wish, fulfillment),
+            _dishFromFulfillment(wish, fulfillment, imageUrl: imageUrl),
             ...state.dishes.where((dish) => dish.name != actualDishName.trim()),
           ]
         : state.dishes;
 
+    final previous = state;
     state = state.copyWith(
       wishes: [
         for (final item in state.wishes)
@@ -466,17 +441,19 @@ class WishPoolController extends Notifier<WishPoolState> {
       fulfillments: nextFulfillments,
       dishes: nextDishes,
     );
-    _repository
-        .fulfillWish(
-          wishId: wishId,
-          actualDishName: actualDishName,
-          helperTasksDone: helperTasksDone,
-          feedbackTags: feedbackTags,
-          note: note,
-          addToDishes: addToDishes,
-        )
-        .then((_) => _refreshRemote())
-        .catchError((_) {});
+    _runWrite(previous, () async {
+      await _repository.fulfillWish(
+        wishId: wishId,
+        actualDishName: actualDishName,
+        helperTasksDone: helperTasksDone,
+        feedbackTags: feedbackTags,
+        note: note,
+        addToDishes: addToDishes,
+        imageUrl: imageUrl,
+      );
+      await _refreshRemote(showRefreshing: false);
+      await _refreshSpirit();
+    });
     return fulfillment;
   }
 
@@ -487,6 +464,7 @@ class WishPoolController extends Notifier<WishPoolState> {
     String difficulty = '普通',
     List<String> tasteTags = const [],
     bool isFavorite = false,
+    String? imageUrl,
   }) {
     final now = DateTime.now();
     final dish = HomeDish(
@@ -497,26 +475,31 @@ class WishPoolController extends Notifier<WishPoolState> {
       difficulty: difficulty,
       tasteTags: tasteTags,
       isFavorite: isFavorite,
+      imageUrl: imageUrl,
       createdAt: now,
       updatedAt: now,
     );
+    final previous = state;
     state = state.copyWith(dishes: [dish, ...state.dishes]);
-    _repository
-        .addDish(
-          name: name,
-          cookOwner: cookOwner,
-          suitableTimeTags: suitableTimeTags,
-          difficulty: difficulty,
-          tasteTags: tasteTags,
-          isFavorite: isFavorite,
-        )
-        .then((_) => _refreshRemote())
-        .catchError((_) {});
+    _runWrite(previous, () async {
+      await _repository.addDish(
+        name: name,
+        cookOwner: cookOwner,
+        suitableTimeTags: suitableTimeTags,
+        difficulty: difficulty,
+        tasteTags: tasteTags,
+        isFavorite: isFavorite,
+        imageUrl: imageUrl,
+      );
+      await _refreshRemote(showRefreshing: false);
+      await _refreshSpirit();
+    });
     return dish;
   }
 
   void updateDish(String id, HomeDish Function(HomeDish dish) update) {
     HomeDish? updatedDish;
+    final previous = state;
     state = state.copyWith(
       dishes: [
         for (final dish in state.dishes)
@@ -527,9 +510,25 @@ class WishPoolController extends Notifier<WishPoolState> {
     if (dish != null) {
       _repository
           .updateDish(id, dish)
-          .then((_) => _refreshRemote())
-          .catchError((_) {});
+          .then((_) => _refreshRemote(showRefreshing: false))
+          .catchError(
+              (Object error) => _handleFailure(error, fallback: previous));
     }
+  }
+
+  void deleteDish(String id) {
+    final previous = state;
+    state = state.copyWith(
+      dishes: [
+        for (final dish in state.dishes)
+          if (dish.id != id) dish,
+      ],
+    );
+    _repository
+        .deleteDish(id)
+        .then((_) => _refreshRemote(showRefreshing: false))
+        .catchError(
+            (Object error) => _handleFailure(error, fallback: previous));
   }
 
   void setKitchenStatus(
@@ -537,6 +536,7 @@ class WishPoolController extends Notifier<WishPoolState> {
     KitchenStatusValue status, {
     String? note,
   }) {
+    final previous = state;
     state = state.copyWith(
       kitchenStatuses: {
         ...state.kitchenStatuses,
@@ -545,8 +545,9 @@ class WishPoolController extends Notifier<WishPoolState> {
     );
     _repository
         .setKitchenStatus(userId, status, note: note)
-        .then((_) => _refreshRemote())
-        .catchError((_) {});
+        .then((_) => _refreshRemote(showRefreshing: false))
+        .catchError(
+            (Object error) => _handleFailure(error, fallback: previous));
   }
 
   Wish wishById(String id) {
@@ -565,6 +566,80 @@ class WishPoolController extends Notifier<WishPoolState> {
           if (item.id == wish.id) wish else item,
       ],
     );
+  }
+
+  Future<WishPoolSnapshot> _fetchSnapshot() {
+    final session = ref.read(sessionControllerProvider).valueOrNull;
+    return _repository.fetchSnapshot(
+      me: session?.user,
+      partner: session?.binding.partner,
+      creatorFilter: state.creatorFilter,
+      statusFilter: state.selectedStatus,
+      dishQuery: state.dishQuery,
+      dishFilters: state.dishFilters,
+    );
+  }
+
+  void _applySnapshot(
+    WishPoolSnapshot snapshot, {
+    bool? isLoading,
+    bool? isRefreshing,
+  }) {
+    state = state.copyWith(
+      users: snapshot.users.isEmpty ? state.users : snapshot.users,
+      wishes: snapshot.wishes,
+      kitchenStatuses: snapshot.kitchenStatuses,
+      fulfillments: snapshot.fulfillments,
+      dishes: snapshot.dishes,
+      isLoading: isLoading,
+      isRefreshing: isRefreshing,
+      errorMessage: null,
+    );
+  }
+
+  void _handleFailure(Object error, {required WishPoolState fallback}) {
+    if (_isUnauthorized(error)) {
+      ref.read(sessionControllerProvider.notifier).logout();
+    }
+    state = fallback.copyWith(
+      isLoading: false,
+      isRefreshing: false,
+      errorMessage: _errorMessage(error),
+    );
+  }
+
+  void _runWrite(WishPoolState previous, Future<void> Function() action) {
+    unawaited(
+      action().catchError(
+        (Object error) => _handleFailure(error, fallback: previous),
+      ),
+    );
+  }
+
+  Future<void> _refreshSpirit() async {
+    await ref.read(spiritControllerProvider.notifier).refreshAfterReward();
+  }
+
+  bool _isUnauthorized(Object error) {
+    return error is DioException && error.response?.statusCode == 401;
+  }
+
+  String _errorMessage(Object error) {
+    if (_isUnauthorized(error)) {
+      return '登录已失效，请重新登录';
+    }
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map && data['message'] != null) {
+        return data['message'].toString();
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return '网络超时，请稍后重试';
+      }
+    }
+    return '同步失败，请稍后重试';
   }
 
   bool _needsConfirmation(WishResponseType type) {
@@ -592,7 +667,11 @@ class WishPoolController extends Notifier<WishPoolState> {
     }.contains(status);
   }
 
-  HomeDish _dishFromFulfillment(Wish wish, WishFulfillment fulfillment) {
+  HomeDish _dishFromFulfillment(
+    Wish wish,
+    WishFulfillment fulfillment, {
+    String? imageUrl,
+  }) {
     final now = DateTime.now();
     return HomeDish(
       id: _nextId('dish'),
@@ -604,8 +683,16 @@ class WishPoolController extends Notifier<WishPoolState> {
       isFavorite: true,
       sourceWishId: wish.id,
       lastFeedback: fulfillment.feedbackTags.join('、'),
+      imageUrl: imageUrl,
       createdAt: now,
       updatedAt: now,
     );
+  }
+
+  Future<String> uploadDishImage({
+    required List<int> bytes,
+    required String filename,
+  }) {
+    return _repository.uploadDishImage(bytes: bytes, filename: filename);
   }
 }

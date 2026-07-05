@@ -1,7 +1,7 @@
-import { PrismaService } from '../../prisma/prisma.service';
-import { CouplesService } from './couples.service';
+import { PrismaService } from "../../prisma/prisma.service";
+import { CouplesService } from "./couples.service";
 
-describe('CouplesService', () => {
+describe("CouplesService", () => {
   let prisma: PrismaService;
   let service: CouplesService;
 
@@ -16,6 +16,11 @@ describe('CouplesService', () => {
   });
 
   beforeEach(async () => {
+    await prisma.spiritGrowthLog.deleteMany({});
+    await prisma.checkin.deleteMany({});
+    await prisma.pointTransaction.deleteMany({});
+    await prisma.pointAccount.deleteMany({});
+    await prisma.coupleSpirit.deleteMany({});
     await prisma.notification.deleteMany({});
     await prisma.wishFulfillment.deleteMany({});
     await prisma.dish.deleteMany({});
@@ -28,26 +33,26 @@ describe('CouplesService', () => {
     await prisma.user.deleteMany({});
   });
 
-  it('binds two users by invite code and prevents duplicate binding', async () => {
+  it("binds two users by invite code and prevents duplicate binding", async () => {
     const inviter = await prisma.user.create({
-      data: { email: 'a@example.com', nickname: 'A' },
+      data: { email: "a@example.com", nickname: "A" },
     });
     const invitee = await prisma.user.create({
-      data: { email: 'b@example.com', nickname: 'B' },
+      data: { email: "b@example.com", nickname: "B" },
     });
 
     const code = await service.generateCode(inviter.id);
     await expect(service.status(inviter.id)).resolves.toMatchObject({
-      status: 'UNBOUND',
+      status: "UNBOUND",
     });
 
     const application = await service.applyByCode(invitee.id, code.code);
     expect(application.inviteeId).toBe(invitee.id);
     await expect(service.status(invitee.id)).resolves.toMatchObject({
-      status: 'PENDING',
+      status: "PENDING",
     });
     await expect(service.status(inviter.id)).resolves.toMatchObject({
-      status: 'WAITING_FOR_ME',
+      status: "WAITING_FOR_ME",
     });
 
     const couple = await service.accept(inviter.id, application.id);
@@ -55,27 +60,29 @@ describe('CouplesService', () => {
     expect(couple.couple.userBId).toBe(invitee.id);
     expect(couple.partner.id).toBe(invitee.id);
 
-    await expect(service.generateCode(inviter.id)).rejects.toThrow('已绑定用户不能重复绑定');
+    await expect(service.generateCode(inviter.id)).rejects.toThrow(
+      "已绑定用户不能重复绑定",
+    );
     await expect(service.status(invitee.id)).resolves.toMatchObject({
-      status: 'BOUND',
+      status: "BOUND",
     });
   });
 
-  it('unbinds an active couple', async () => {
+  it("unbinds an active couple", async () => {
     const userA = await prisma.user.create({
-      data: { email: 'c@example.com', nickname: 'C' },
+      data: { email: "c@example.com", nickname: "C" },
     });
     const userB = await prisma.user.create({
-      data: { email: 'd@example.com', nickname: 'D' },
+      data: { email: "d@example.com", nickname: "D" },
     });
     await prisma.couple.create({
       data: { userAId: userA.id, userBId: userB.id },
     });
 
     const unbound = await service.unbind(userA.id);
-    expect(unbound.status).toBe('UNBOUND');
+    expect(unbound.status).toBe("UNBOUND");
     await expect(service.status(userA.id)).resolves.toMatchObject({
-      status: 'UNBOUND',
+      status: "UNBOUND",
     });
   });
 });

@@ -1,8 +1,8 @@
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma/prisma.service';
-import { AuthService } from './auth.service';
+import { JwtService } from "@nestjs/jwt";
+import { PrismaService } from "../../prisma/prisma.service";
+import { AuthService } from "./auth.service";
 
-describe('AuthService', () => {
+describe("AuthService", () => {
   let prisma: PrismaService;
   let service: AuthService;
 
@@ -12,8 +12,8 @@ describe('AuthService', () => {
     service = new AuthService(
       prisma,
       new JwtService({
-        secret: process.env.JWT_SECRET ?? 'dev-kitchen-wish-well-secret',
-        signOptions: { expiresIn: '30d' },
+        secret: process.env.JWT_SECRET ?? "dev-kitchen-wish-well-secret",
+        signOptions: { expiresIn: "30d" },
       }),
     );
   });
@@ -23,6 +23,11 @@ describe('AuthService', () => {
   });
 
   beforeEach(async () => {
+    await prisma.spiritGrowthLog.deleteMany({});
+    await prisma.checkin.deleteMany({});
+    await prisma.pointTransaction.deleteMany({});
+    await prisma.pointAccount.deleteMany({});
+    await prisma.coupleSpirit.deleteMany({});
     await prisma.notification.deleteMany({});
     await prisma.wishFulfillment.deleteMany({});
     await prisma.dish.deleteMany({});
@@ -35,24 +40,24 @@ describe('AuthService', () => {
     await prisma.user.deleteMany({});
   });
 
-  it('registers, logs in, and returns the current user', async () => {
+  it("registers, logs in, and returns the current user", async () => {
     const registered = await service.register({
-      email: 'one@example.com',
-      password: 'secret123',
-      nickname: '一号',
+      email: "one@example.com",
+      password: "secret123",
+      nickname: "一号",
     });
 
     expect(registered.token).toBeTruthy();
-    expect(registered.user.email).toBe('one@example.com');
+    expect(registered.user.email).toBe("one@example.com");
 
     const loggedIn = await service.login({
-      email: 'one@example.com',
-      password: 'secret123',
+      email: "one@example.com",
+      password: "secret123",
     });
     expect(loggedIn.user.id).toBe(registered.user.id);
 
     await expect(service.me(registered.user.id)).resolves.toMatchObject({
-      nickname: '一号',
+      nickname: "一号",
     });
   });
 });

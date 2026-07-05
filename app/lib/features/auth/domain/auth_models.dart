@@ -19,7 +19,7 @@ class AuthUser {
     String? nickname,
     String? email,
     String? phone,
-    String? avatarUrl,
+    Object? avatarUrl = _unchangedAvatarUrl,
     UserGender? gender,
   }) {
     return AuthUser(
@@ -27,11 +27,15 @@ class AuthUser {
       nickname: nickname ?? this.nickname,
       email: email ?? this.email,
       phone: phone ?? this.phone,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      avatarUrl: identical(avatarUrl, _unchangedAvatarUrl)
+          ? this.avatarUrl
+          : avatarUrl as String?,
       gender: gender ?? this.gender,
     );
   }
 }
+
+const _unchangedAvatarUrl = Object();
 
 enum UserGender {
   male,

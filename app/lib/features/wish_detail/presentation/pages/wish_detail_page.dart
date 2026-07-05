@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/ui/design_tokens.dart';
 import '../../../../shared/widgets/soft_components.dart';
 import '../../../auth/domain/auth_models.dart';
+import '../../../spirit/presentation/widgets/spirit_overlay_scaffold.dart';
 import '../../../wish_pool/domain/models/kitchen_models.dart';
 import '../../../wish_pool/presentation/providers/wish_pool_controller.dart';
 
@@ -45,62 +49,83 @@ class _WishDetailPageState extends ConsumerState<WishDetailPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(wishPoolControllerProvider);
     final controller = ref.read(wishPoolControllerProvider.notifier);
-    final wish = state.wishes.firstWhere((item) => item.id == widget.wishId);
-    final creator = state.users.firstWhere((user) => user.id == wish.creatorId);
+    final wish = _wishOrNull(state, widget.wishId);
+    if (wish == null) {
+      return _MissingWishScaffold(
+        loadingLatest: _loadingLatest,
+        onRefresh: _loadingLatest ? null : _refreshLatest,
+      );
+    }
+    final creator = _userOrFallback(state, wish.creatorId);
     final currentUserId = state.me.id;
 
-    return Scaffold(
-      bottomNavigationBar: _DetailBottomBar(
-        wish: wish,
-        controller: controller,
-        currentUserId: currentUserId,
-        state: state,
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          children: [
-            WarmTopBar(
-              title: '愿望详情',
-              subtitle: _loadingLatest ? '正在同步最新状态...' : '愿望怎么被回应，这里都能看见。',
-              leading: IconButton(
-                tooltip: '返回',
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, size: 19),
-              ),
-              actions: [
-                IconButton(
-                  tooltip: '刷新',
-                  onPressed: _loadingLatest ? null : _refreshLatest,
-                  icon: const Icon(Icons.sync, size: 19),
-                ),
-                IconButton(
-                  tooltip: '更多',
-                  onPressed: () =>
-                      _showWishActions(context, controller, wish, state.me.id),
-                  icon: const Icon(Icons.more_horiz),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _WishMainCard(wish: wish, creatorName: creator.nickname),
-            if (wish.status == WishStatus.pendingConfirmation &&
-                wish.currentResponse != null) ...[
-              const SizedBox(height: 14),
-              _PendingConfirmCard(
-                wish: wish,
-                controller: controller,
-                currentUserId: currentUserId,
-                creatorName: creator.nickname,
-                responderName:
-                    _userName(state, wish.currentResponse!.responderId),
+    return SpiritOverlayScaffold(
+      bottomOffset: 122,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        bottomNavigationBar: _DetailBottomBar(
+          wish: wish,
+          controller: controller,
+          currentUserId: currentUserId,
+          state: state,
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              const KitchenIllustrationBackground(),
+              ListView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 112),
+                children: [
+                  MagazineHeader(
+                    title: '愿望详情',
+                    kicker: 'Wish Story',
+                    subtitle:
+                        _loadingLatest ? '正在同步最新状态...' : '愿望怎么被回应，这里都能看见。',
+                    leadingIcon: Icons.receipt_long_rounded,
+                    actions: [
+                      IconButton(
+                        tooltip: '返回',
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.arrow_back, size: 19),
+                      ),
+                      IconButton(
+                        tooltip: '刷新',
+                        onPressed: _loadingLatest ? null : _refreshLatest,
+                        icon: const Icon(Icons.sync, size: 19),
+                      ),
+                      IconButton(
+                        tooltip: '更多',
+                        onPressed: () => _showWishActions(
+                            context, controller, wish, state.me.id),
+                        icon: const Icon(Icons.more_horiz),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _WishMainCard(wish: wish, creatorName: creator.nickname),
+                  if (wish.status == WishStatus.pendingConfirmation &&
+                      wish.currentResponse != null) ...[
+                    const SizedBox(height: 14),
+                    _PendingConfirmCard(
+                      wish: wish,
+                      controller: controller,
+                      currentUserId: currentUserId,
+                      creatorName: creator.nickname,
+                      responderName:
+                          _userName(state, wish.currentResponse!.responderId),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  const MagazineSectionTitle(
+                    title: '状态流转',
+                    subtitle: '这张愿望卡是怎么走到现在的。',
+                  ),
+                  const SizedBox(height: 12),
+                  _Timeline(wish: wish, state: state),
+                ],
               ),
             ],
-            const SizedBox(height: 22),
-            Text('状态流转', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            _Timeline(wish: wish, state: state),
-          ],
+          ),
         ),
       ),
     );
@@ -160,6 +185,67 @@ class _WishDetailPageState extends ConsumerState<WishDetailPage> {
   }
 }
 
+Wish? _wishOrNull(WishPoolState state, String id) {
+  for (final wish in state.wishes) {
+    if (wish.id == id) {
+      return wish;
+    }
+  }
+  return null;
+}
+
+AppUser _userOrFallback(WishPoolState state, String id) {
+  for (final user in state.users) {
+    if (user.id == id) {
+      return user;
+    }
+  }
+  return state.partner;
+}
+
+class _MissingWishScaffold extends StatelessWidget {
+  const _MissingWishScaffold({
+    required this.loadingLatest,
+    required this.onRefresh,
+  });
+
+  final bool loadingLatest;
+  final VoidCallback? onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return MagazineScaffold(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+      children: [
+        MagazineHeader(
+          title: '愿望详情',
+          kicker: 'Wish Story',
+          subtitle: loadingLatest ? '正在同步最新状态...' : '这个愿望暂时看不到。',
+          leadingIcon: Icons.search_off_rounded,
+          actions: [
+            IconButton(
+              tooltip: '返回',
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back, size: 19),
+            ),
+            IconButton(
+              tooltip: '刷新',
+              onPressed: onRefresh,
+              icon: const Icon(Icons.sync, size: 19),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const MagazineEmptyState(
+          title: '愿望暂时看不到',
+          message: '愿望不存在、已被删除，或当前账号没有权限查看。',
+          icon: Icons.search_off_rounded,
+        ),
+      ],
+    );
+  }
+}
+
 class _WishMainCard extends StatelessWidget {
   const _WishMainCard({required this.wish, required this.creatorName});
 
@@ -168,8 +254,9 @@ class _WishMainCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SoftCard(
-      color: AppColors.surface,
+    return MagazineCoverCard(
+      label: '$creatorName许的 · ${wish.intensity}',
+      icon: Icons.restaurant_menu_rounded,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -182,12 +269,7 @@ class _WishMainCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        '$creatorName许的 · ${wish.intensity}',
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                    ),
+                    const Spacer(),
                     SoftChip(
                         label: _wishStatusText(wish.status), selected: true),
                   ],
@@ -461,45 +543,49 @@ class _DetailBottomBar extends StatelessWidget {
     final isMine = wish.creatorId == currentUserId;
     final canRespond = !isMine && _canRespond(wish.status);
     final canFulfill = _canFulfill(wish.status);
-    return Container(
-      color: AppColors.background,
-      child: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
-          children: [
-            if (wish.status == WishStatus.pendingConfirmation) ...[
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: null,
-                  icon: const Icon(Icons.hourglass_top),
-                  label: const Text('等点头'),
-                ),
-              ),
-            ] else ...[
-              if (canRespond) ...[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _showResponseSheet(context, controller, wish),
-                    icon: const Icon(Icons.edit_square),
-                    label: const Text('我接住'),
+    return MagazineBottomActionBar(
+      children: [
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: AppAnimation.normal,
+            child: Row(
+              children: [
+                if (wish.status == WishStatus.pendingConfirmation) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: null,
+                      icon: const Icon(Icons.hourglass_top),
+                      label: const Text('等点头'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                ] else ...[
+                  if (canRespond) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showResponseSheet(context, controller, wish),
+                        icon: const Icon(Icons.edit_square),
+                        label: const Text('我接住'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: canFulfill
+                          ? () =>
+                              _showFulfillmentSheet(context, controller, wish)
+                          : null,
+                      icon: const Icon(Icons.local_dining),
+                      label: const Text('吃完啦'),
+                    ),
+                  ),
+                ],
               ],
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: canFulfill
-                      ? () => _showFulfillmentSheet(context, controller, wish)
-                      : null,
-                  icon: const Icon(Icons.local_dining),
-                  label: const Text('吃完啦'),
-                ),
-              ),
-            ],
-          ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -569,10 +655,10 @@ class _ResponseSheet extends StatefulWidget {
 }
 
 class _ResponseSheetState extends State<_ResponseSheet> {
-  final _titleController = TextEditingController(text: '红烧鸡腿');
+  final _titleController = TextEditingController();
   final _reasonController = TextEditingController();
-  final _reasonTags = <String>{'家里没食材'};
-  WishResponseType _type = WishResponseType.alternative;
+  final _reasonTags = <String>{};
+  WishResponseType _type = WishResponseType.fulfillTonight;
   String _proposedTime = '周末';
 
   @override
@@ -642,7 +728,7 @@ class _ResponseSheetState extends State<_ResponseSheet> {
               children: [
                 _typeChip('今晚我来实现', WishResponseType.fulfillTonight),
                 _typeChip('做轻松版', WishResponseType.lightVersion),
-                _typeChip('换成红烧鸡腿', WishResponseType.alternative),
+                _typeChip('换个版本', WishResponseType.alternative),
                 _typeChip('改天实现', WishResponseType.defer),
                 _typeChip('一起做吧', WishResponseType.together),
                 _typeChip('先搁着', WishResponseType.shelve),
@@ -751,14 +837,6 @@ class _ResponseSheetState extends State<_ResponseSheet> {
       selected: _type == type,
       onTap: () => setState(() {
         _type = type;
-        if (type == WishResponseType.lightVersion &&
-            _titleController.text.trim().isEmpty) {
-          _titleController.text = '番茄鸡蛋面';
-        }
-        if (type == WishResponseType.alternative &&
-            _titleController.text.trim().isEmpty) {
-          _titleController.text = '红烧鸡腿';
-        }
       }),
       dense: false,
     );
@@ -785,6 +863,8 @@ class _FulfillmentSheetState extends State<_FulfillmentSheet> {
   final _feedbackTags = <String>{'今天很好吃'};
   late final Set<String> _helperTasksDone;
   bool _addToDishes = true;
+  XFile? _dishImage;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -824,6 +904,15 @@ class _FulfillmentSheetState extends State<_FulfillmentSheet> {
                 labelText: '实际吃了什么',
                 prefixIcon: Icon(Icons.restaurant),
               ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            _FulfillmentImagePicker(
+              title: _dishController.text,
+              image: _dishImage,
+              onPickFromGallery: () => _pickImage(ImageSource.gallery),
+              onTakePhoto: () => _pickImage(ImageSource.camera),
+              onRemove: () => setState(() => _dishImage = null),
             ),
             if (widget.wish.helperTasks.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -879,21 +968,134 @@ class _FulfillmentSheetState extends State<_FulfillmentSheet> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () {
-                widget.controller.fulfillWish(
-                  wishId: widget.wish.id,
-                  actualDishName: _dishController.text,
-                  helperTasksDone: _helperTasksDone.toList(),
-                  feedbackTags: _feedbackTags.toList(),
-                  addToDishes: _addToDishes,
-                );
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.check_circle_outline),
-              label: const Text('记录兑现'),
+              onPressed: _saving
+                  ? null
+                  : () async {
+                      setState(() => _saving = true);
+                      String? imageUrl;
+                      if (_addToDishes && _dishImage != null) {
+                        try {
+                          imageUrl = await widget.controller.uploadDishImage(
+                            bytes: await _dishImage!.readAsBytes(),
+                            filename: _dishImage!.name,
+                          );
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('图片上传失败，请稍后再试')),
+                            );
+                            setState(() => _saving = false);
+                          }
+                          return;
+                        }
+                      }
+                      widget.controller.fulfillWish(
+                        wishId: widget.wish.id,
+                        actualDishName: _dishController.text,
+                        helperTasksDone: _helperTasksDone.toList(),
+                        feedbackTags: _feedbackTags.toList(),
+                        addToDishes: _addToDishes,
+                        imageUrl: imageUrl,
+                      );
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline),
+              label: Text(_saving ? '记录中' : '记录兑现'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final image = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1800,
+      imageQuality: 85,
+    );
+    if (image != null && mounted) {
+      setState(() => _dishImage = image);
+    }
+  }
+}
+
+class _FulfillmentImagePicker extends StatelessWidget {
+  const _FulfillmentImagePicker({
+    required this.title,
+    required this.onPickFromGallery,
+    required this.onTakePhoto,
+    required this.onRemove,
+    this.image,
+  });
+
+  final String title;
+  final XFile? image;
+  final VoidCallback onPickFromGallery;
+  final VoidCallback onTakePhoto;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: AppColors.surfaceLow,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (image == null)
+            FoodImageTile(title: title, height: 120)
+          else
+            FutureBuilder<Uint8List>(
+              future: image!.readAsBytes(),
+              builder: (context, snapshot) {
+                final bytes = snapshot.data;
+                if (bytes == null) {
+                  return FoodImageTile(title: title, height: 120);
+                }
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Image.memory(
+                    bytes,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onPickFromGallery,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(image == null ? '添加成品照' : '更换照片'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onTakePhoto,
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('拍照'),
+              ),
+              if (image != null)
+                TextButton.icon(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.close),
+                  label: const Text('移除照片'),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -929,7 +1131,8 @@ String _responseText(WishResponse response) {
   return switch (response.type) {
     WishResponseType.fulfillTonight => '今晚我来实现',
     WishResponseType.lightVersion => '做轻松版',
-    WishResponseType.alternative => '换成${response.proposedTitle ?? '红烧鸡腿'}',
+    WishResponseType.alternative =>
+      response.proposedTitle == null ? '换个版本' : '换成${response.proposedTitle}',
     WishResponseType.defer => '改到${response.proposedTime ?? '周末'}',
     WishResponseType.together => '一起做吧',
     WishResponseType.shelve => '先搁着',

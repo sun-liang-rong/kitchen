@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kitchen_wish_well/app.dart';
+import 'package:kitchen_wish_well/core/router/app_router.dart';
 import 'package:kitchen_wish_well/features/auth/domain/auth_models.dart';
 import 'package:kitchen_wish_well/features/auth/presentation/providers/session_controller.dart';
 import 'package:kitchen_wish_well/features/couple/domain/couple_models.dart';
 import 'package:kitchen_wish_well/features/couple/presentation/pages/binding_page.dart';
-import 'package:kitchen_wish_well/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:kitchen_wish_well/features/wish_pool/domain/models/kitchen_models.dart';
 import 'package:kitchen_wish_well/features/wish_pool/presentation/pages/fulfillment_records_page.dart';
 import 'package:kitchen_wish_well/features/wish_pool/presentation/providers/wish_pool_controller.dart';
@@ -66,7 +66,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [boundSessionOverride, notificationsOverride],
+        overrides: [
+          boundSessionOverride,
+          notificationsOverride,
+          seededWishPoolOverride,
+        ],
         child: const KitchenWishWellApp(),
       ),
     );
@@ -104,6 +108,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.person_outline).last);
     await tester.pumpAndSettle();
     expect(find.text('我'), findsWidgets);
+    expect(find.byType(CircleAvatar), findsWidgets);
 
     await tester.tap(find.byIcon(Icons.edit));
     await tester.pumpAndSettle();
@@ -179,10 +184,17 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [boundSessionOverride, notificationsOverride],
-        child: const MaterialApp(home: NotificationsPage()),
+        overrides: [
+          boundSessionOverride,
+          notificationsOverride,
+          seededWishPoolOverride,
+        ],
+        child: const KitchenWishWellApp(),
       ),
     );
+    await tester.pumpAndSettle();
+
+    appRouter.go('/notifications');
     await tester.pumpAndSettle();
 
     expect(find.text('有新的吃饭愿望'), findsOneWidget);
@@ -191,6 +203,8 @@ void main() {
     await tester.tap(find.text('有新的吃饭愿望'));
     await tester.pumpAndSettle();
     expect(find.text('未读'), findsNothing);
+    expect(find.text('可乐鸡翅'), findsWidgets);
+    appRouter.go('/');
   });
 }
 

@@ -1,8 +1,8 @@
-import { NotificationType } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import { NotificationsService } from './notifications.service';
+import { NotificationType } from "@prisma/client";
+import { PrismaService } from "../../prisma/prisma.service";
+import { NotificationsService } from "./notifications.service";
 
-describe('NotificationsService', () => {
+describe("NotificationsService", () => {
   let prisma: PrismaService;
   let service: NotificationsService;
 
@@ -17,6 +17,11 @@ describe('NotificationsService', () => {
   });
 
   beforeEach(async () => {
+    await prisma.spiritGrowthLog.deleteMany({});
+    await prisma.checkin.deleteMany({});
+    await prisma.pointTransaction.deleteMany({});
+    await prisma.pointAccount.deleteMany({});
+    await prisma.coupleSpirit.deleteMany({});
     await prisma.notification.deleteMany({});
     await prisma.wishFulfillment.deleteMany({});
     await prisma.dish.deleteMany({});
@@ -29,16 +34,16 @@ describe('NotificationsService', () => {
     await prisma.user.deleteMany({});
   });
 
-  it('lists unread notifications and marks them read', async () => {
+  it("lists unread notifications and marks them read", async () => {
     const user = await prisma.user.create({
-      data: { email: 'notify@example.com', nickname: '通知用户' },
+      data: { email: "notify@example.com", nickname: "通知用户" },
     });
     const notification = await prisma.notification.create({
       data: {
         userId: user.id,
         type: NotificationType.WISH_CREATED,
-        title: '新愿望',
-        content: '对方许了一个愿望',
+        title: "新愿望",
+        content: "对方许了一个愿望",
       },
     });
 

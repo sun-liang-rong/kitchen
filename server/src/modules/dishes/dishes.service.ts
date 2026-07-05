@@ -1,30 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { MvpDataService } from '../mvp_data/mvp-data.service';
-import { UpsertDishDto } from './dto/upsert-dish.dto';
+import { Injectable } from "@nestjs/common";
+import { SharedDataService } from "../shared_data/shared-data.service";
+import { UpsertDishDto } from "./dto/upsert-dish.dto";
 
 @Injectable()
 export class DishesService {
-  constructor(private readonly data: MvpDataService) {}
+  constructor(private readonly data: SharedDataService) {}
 
   findAll(input: {
     suitableTimeTag?: string;
     cookOwner?: string;
-    userId?: string;
+    userId: string;
     q?: string;
     difficulty?: string;
     isFavorite?: boolean;
   }) {
-    const { suitableTimeTag, cookOwner, userId, q, difficulty, isFavorite } = input;
-    return userId
-      ? this.data.listDishesForUser(userId, { suitableTimeTag, cookOwner, q, difficulty, isFavorite })
-      : this.data.listDishes({ suitableTimeTag, cookOwner, q, difficulty, isFavorite });
+    const { suitableTimeTag, cookOwner, userId, q, difficulty, isFavorite } =
+      input;
+    return this.data.listDishesForUser(userId, {
+      suitableTimeTag,
+      cookOwner,
+      q,
+      difficulty,
+      isFavorite,
+    });
   }
 
-  create(dto: UpsertDishDto, userId?: string) {
-    return userId ? this.data.createDishForUser(userId, dto) : this.data.createDish(dto);
+  create(userId: string, dto: UpsertDishDto) {
+    return this.data.createDishForUser(userId, dto);
   }
 
-  update(id: string, dto: Partial<UpsertDishDto>, userId?: string) {
-    return userId ? this.data.updateDishForUser(userId, id, dto) : this.data.updateDish(id, dto);
+  update(userId: string, id: string, dto: Partial<UpsertDishDto>) {
+    return this.data.updateDishForUser(userId, id, dto);
+  }
+
+  remove(userId: string, id: string) {
+    return this.data.deleteDishForUser(userId, id);
   }
 }

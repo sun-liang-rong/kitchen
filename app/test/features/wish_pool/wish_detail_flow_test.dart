@@ -2,9 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kitchen_wish_well/app.dart';
+import 'package:kitchen_wish_well/features/wish_detail/presentation/pages/wish_detail_page.dart';
 import '../../test_session.dart';
 
 void main() {
+  testWidgets('shows a friendly state when wish is missing', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          boundSessionOverride,
+          notificationsOverride,
+          seededWishPoolOverride,
+        ],
+        child: const MaterialApp(
+          home: WishDetailPage(wishId: 'missing-wish'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('愿望详情'), findsOneWidget);
+    expect(find.text('愿望不存在、已被删除，或当前账号没有权限查看。'), findsOneWidget);
+  });
+
   testWidgets('responds confirms and fulfills from detail page',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1200);
@@ -14,7 +34,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [boundSessionOverride, notificationsOverride],
+        overrides: [
+          boundSessionOverride,
+          notificationsOverride,
+          seededWishPoolOverride,
+        ],
         child: const KitchenWishWellApp(),
       ),
     );

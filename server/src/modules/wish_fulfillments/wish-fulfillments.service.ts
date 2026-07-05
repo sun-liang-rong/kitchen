@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { MvpDataService } from '../mvp_data/mvp-data.service';
+import { SharedDataService } from '../shared_data/shared-data.service';
 import { CreateWishFulfillmentDto } from './dto/create-wish-fulfillment.dto';
 
 @Injectable()
 export class WishFulfillmentsService {
-  constructor(private readonly data: MvpDataService) {}
+  constructor(private readonly data: SharedDataService) {}
 
-  findAll(userId?: string) {
-    return userId ? this.data.listFulfillmentsForUser(userId) : this.data.listFulfillments();
+  findAll(userId: string) {
+    return this.data.listFulfillmentsForUser(userId);
   }
 
-  create(wishId: string, dto: CreateWishFulfillmentDto, userId?: string) {
-    return userId ? this.data.fulfillWishForUser(userId, wishId, dto) : this.data.fulfillWish(wishId, dto);
+  create(userId: string, wishId: string, dto: CreateWishFulfillmentDto) {
+    return this.data.fulfillWishForUser(userId, wishId, dto);
   }
 }

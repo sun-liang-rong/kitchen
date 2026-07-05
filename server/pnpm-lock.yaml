@@ -90,6 +90,9 @@ importers:
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1
+      '@types/supertest':
+        specifier: ^7.2.0
+        version: 7.2.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.18.0
         version: 8.62.1(@typescript-eslint/parser@8.62.1(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.2))(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.2)
@@ -748,6 +751,9 @@ packages:
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==, tarball: https://registry.npmmirror.com/@types/connect/-/connect-3.4.38.tgz}
 
+  '@types/cookiejar@2.1.5':
+    resolution: {integrity: sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==, tarball: https://registry.npmmirror.com/@types/cookiejar/-/cookiejar-2.1.5.tgz}
+
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==, tarball: https://registry.npmmirror.com/@types/eslint-scope/-/eslint-scope-3.7.7.tgz}
 
@@ -790,6 +796,9 @@ packages:
   '@types/jsonwebtoken@9.0.5':
     resolution: {integrity: sha512-VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==, tarball: https://registry.npmmirror.com/@types/jsonwebtoken/-/jsonwebtoken-9.0.5.tgz}
 
+  '@types/methods@1.1.4':
+    resolution: {integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==, tarball: https://registry.npmmirror.com/@types/methods/-/methods-1.1.4.tgz}
+
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==, tarball: https://registry.npmmirror.com/@types/ms/-/ms-2.1.0.tgz}
 
@@ -822,6 +831,12 @@ packages:
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==, tarball: https://registry.npmmirror.com/@types/stack-utils/-/stack-utils-2.0.3.tgz}
+
+  '@types/superagent@8.1.10':
+    resolution: {integrity: sha512-nbt4IWXABhW0jGmmpRzCFNlbmwCTzZ2gTUsNIr+X+ItdqPms+PAJZbWsNzpS2USqXjcoNLQcO6nXo60zcPQiIg==, tarball: https://registry.npmmirror.com/@types/superagent/-/superagent-8.1.10.tgz}
+
+  '@types/supertest@7.2.0':
+    resolution: {integrity: sha512-uh2Lv57xvggst6lCqNdFAmDSvoMG7M/HDtX4iUCquxQ5EGPtaPM5PL5Hmi7LCvOG8db7YaCPNJEeoI8s/WzIQw==, tarball: https://registry.npmmirror.com/@types/supertest/-/supertest-7.2.0.tgz}
 
   '@types/validator@13.15.10':
     resolution: {integrity: sha512-T8L6i7wCuyoK8A/ZeLYt1+q0ty3Zb9+qbSSvrIVitzT3YjZqkTZ40IbRsPanlB4h1QB3JVL1SYCdR6ngtFYcuA==, tarball: https://registry.npmmirror.com/@types/validator/-/validator-13.15.10.tgz}
@@ -3753,7 +3768,7 @@ snapshots:
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
-      string-width-cjs: string-width@4.2.0
+      string-width-cjs: string-width@4.2.3
       strip-ansi: 7.2.0
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
@@ -4283,6 +4298,8 @@ snapshots:
     dependencies:
       '@types/node': 22.20.0
 
+  '@types/cookiejar@2.1.5': {}
+
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 9.6.1
@@ -4340,6 +4357,8 @@ snapshots:
     dependencies:
       '@types/node': 22.20.0
 
+  '@types/methods@1.1.4': {}
+
   '@types/ms@2.1.0': {}
 
   '@types/multer@1.4.12':
@@ -4378,6 +4397,18 @@ snapshots:
       '@types/node': 22.20.0
 
   '@types/stack-utils@2.0.3': {}
+
+  '@types/superagent@8.1.10':
+    dependencies:
+      '@types/cookiejar': 2.1.5
+      '@types/methods': 1.1.4
+      '@types/node': 22.20.0
+      form-data: 4.0.6
+
+  '@types/supertest@7.2.0':
+    dependencies:
+      '@types/methods': 1.1.4
+      '@types/superagent': 8.1.10
 
   '@types/validator@13.15.10': {}
 

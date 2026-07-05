@@ -1,9 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/ui/design_tokens.dart';
 import '../../../../shared/widgets/soft_components.dart';
+import '../../../spirit/presentation/widgets/spirit_overlay_scaffold.dart';
 import '../../../wish_pool/domain/models/kitchen_models.dart';
 import '../../../wish_pool/presentation/providers/wish_pool_controller.dart';
 
@@ -61,64 +65,60 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
       return true;
     }).toList();
 
-    return Scaffold(
-      bottomNavigationBar: const AppBottomNav(current: 'dishes'),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
-          children: [
-            WarmTopBar(
-              title: '厨房许愿池',
-              leading: const CircleAvatar(
-                radius: 13,
-                backgroundColor: AppColors.surfaceHigh,
-                child:
-                    Icon(Icons.restaurant, size: 14, color: AppColors.primary),
-              ),
-              actions: const [NotificationBell(color: AppColors.text)],
-              centerTitle: true,
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text('我们家的菜',
-                      style: Theme.of(context).textTheme.headlineMedium),
-                ),
-                FilledButton.icon(
+    return SpiritOverlayScaffold(
+      child: MagazineScaffold(
+        bottomNavigationBar: const AppBottomNav(current: 'dishes'),
+        children: [
+          MagazineHeader(
+            title: '我们家的菜',
+            kicker: 'Family Recipes',
+            subtitle: '翻一翻常吃菜，今晚少纠结一点。',
+            leadingIcon: Icons.menu_book_rounded,
+            actions: [
+              Tooltip(
+                message: '新增菜品',
+                child: FilledButton.icon(
                   onPressed: () => _showDishSheet(context, controller),
-                  icon: const Icon(Icons.add, size: 18),
+                  icon: const Icon(Icons.add),
                   label: const Text('新增'),
-                  style:
-                      FilledButton.styleFrom(minimumSize: const Size(74, 36)),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(76, 38),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _RecommendationCard(
-              dishes: state.dishes,
-              index: _recommendationIndex,
-              onUseTonight: (title) {
-                controller.createWish(
-                  title: title,
-                  desiredTime: '今晚',
-                  intensity: '今天想吃',
-                  substituteOption: '可以换类似的',
-                  helperTasks: const ['饭后收桌'],
-                );
-                context.go('/');
-              },
-              onShuffle: () {
-                setState(() {
-                  _recommendationIndex += 1;
-                });
-              },
-            ),
-            const SizedBox(height: 18),
-            Row(
+              ),
+              const NotificationBell(color: AppColors.text),
+            ],
+            center: true,
+          ),
+          const SizedBox(height: 14),
+          _RecommendationCard(
+            dishes: state.dishes,
+            index: _recommendationIndex,
+            onAddDish: () => _showDishSheet(context, controller),
+            onUseTonight: (title) {
+              controller.createWish(
+                title: title,
+                desiredTime: '今晚',
+                intensity: '今天想吃',
+                substituteOption: '可以换类似的',
+                helperTasks: const ['饭后收桌'],
+              );
+              context.go('/');
+            },
+            onShuffle: () {
+              setState(() {
+                _recommendationIndex += 1;
+              });
+            },
+          ),
+          const SizedBox(height: 18),
+          MagazineSectionTitle(
+            title: '全部菜品',
+            subtitle: '按标签、难度和谁会做来翻页。',
+            action: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('全部菜品', style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
                 IconButton(
                   tooltip: '筛选',
                   onPressed: () =>
@@ -137,72 +137,73 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
                 ),
               ],
             ),
-            if (_searching) ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: '搜索菜名、标签或反馈',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: query.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: '清空',
-                          onPressed: () {
-                            _searchController.clear();
-                            controller.searchDishes('');
-                          },
-                          icon: const Icon(Icons.clear),
-                        ),
-                ),
-                onChanged: controller.searchDishes,
+          ),
+          if (_searching) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: '搜索菜名、标签或反馈',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: '清空',
+                        onPressed: () {
+                          _searchController.clear();
+                          controller.searchDishes('');
+                        },
+                        icon: const Icon(Icons.clear),
+                      ),
               ),
-            ],
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final filter
-                      in _activeFilterLabels(state.dishFilters)) ...[
-                    SoftChip(
-                      label: filter,
-                      selected: filter != '全部',
-                      onTap:
-                          filter == '全部' ? null : controller.clearDishFilters,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                ],
-              ),
+              onChanged: controller.searchDishes,
             ),
-            const SizedBox(height: 12),
-            if (dishes.isEmpty)
-              const SoftCard(
-                padding: EdgeInsets.symmetric(vertical: 46),
-                child: Center(child: Text('还没有符合筛选的菜')),
-              )
-            else
-              for (final dish in dishes) ...[
-                _DishCard(
-                  name: dish.name,
-                  subtitle: [
-                    if (dish.difficulty != null) dish.difficulty!,
-                    if (dish.lastFeedback != null) dish.lastFeedback!,
-                  ].join(' · '),
-                  tags: [
-                    ...dish.suitableTimeTags.take(2),
-                    dish.cookOwner == state.partner.id ? '她会做' : '我会做',
-                  ],
-                  onEdit: () =>
-                      _showDishSheet(context, controller, dishId: dish.id),
-                ),
-                const SizedBox(height: 12),
+          ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final filter
+                    in _activeFilterLabels(state.dishFilters)) ...[
+                  SoftChip(
+                    label: filter,
+                    selected: filter != '全部',
+                    onTap: filter == '全部' ? null : controller.clearDishFilters,
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (dishes.isEmpty)
+            _DishEmptyState(
+              hasFilters: query.isNotEmpty || filters.isActive,
+              onAddDish: () => _showDishSheet(context, controller),
+            )
+          else ...[
+            for (final dish in dishes) ...[
+              _DishCard(
+                name: dish.name,
+                subtitle: [
+                  if (dish.difficulty != null) dish.difficulty!,
+                  if (dish.lastFeedback != null) dish.lastFeedback!,
+                ].join(' · '),
+                tags: [
+                  ...dish.suitableTimeTags.take(2),
+                  dish.cookOwner == state.partner.id ? '她会做' : '我会做',
+                ],
+                imageUrl: dish.imageUrl,
+                onEdit: () =>
+                    _showDishSheet(context, controller, dishId: dish.id),
+              ),
+              const SizedBox(height: 12),
+            ],
             _AddDishDashedCard(
                 onTap: () => _showDishSheet(context, controller)),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -353,6 +354,9 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
     final nameController = TextEditingController(text: dish?.name);
     var cookOwner = dish?.cookOwner ?? state.me.id;
     var difficulty = dish?.difficulty ?? '普通';
+    String? imageUrl = dish?.imageUrl;
+    XFile? selectedImage;
+    var saving = false;
     final tags = {...?dish?.suitableTimeTags};
 
     showModalBottomSheet<void>(
@@ -380,9 +384,35 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
                     Text(dish == null ? '录入拿手好菜' : '编辑这道菜',
                         style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 12),
+                    _DishImagePicker(
+                      title: nameController.text,
+                      imageUrl: imageUrl,
+                      localImage: selectedImage,
+                      onPickFromGallery: () async {
+                        final picked =
+                            await _pickDishImage(ImageSource.gallery);
+                        if (picked == null) {
+                          return;
+                        }
+                        setSheetState(() => selectedImage = picked);
+                      },
+                      onTakePhoto: () async {
+                        final picked = await _pickDishImage(ImageSource.camera);
+                        if (picked == null) {
+                          return;
+                        }
+                        setSheetState(() => selectedImage = picked);
+                      },
+                      onRemove: () => setSheetState(() {
+                        selectedImage = null;
+                        imageUrl = null;
+                      }),
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(labelText: '菜名'),
+                      onChanged: (_) => setSheetState(() {}),
                     ),
                     const SizedBox(height: 12),
                     Wrap(
@@ -432,35 +462,88 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
                     ),
                     const SizedBox(height: 16),
                     FilledButton.icon(
-                      onPressed: () {
-                        final name = nameController.text.trim();
-                        if (name.isEmpty) {
-                          return;
-                        }
-                        if (dish == null) {
-                          controller.addDish(
-                            name: name,
-                            cookOwner: cookOwner,
-                            suitableTimeTags: tags.toList(),
-                            difficulty: difficulty,
-                            isFavorite: true,
-                          );
-                        } else {
-                          controller.updateDish(
-                            dish.id,
-                            (item) => item.copyWith(
-                              name: name,
-                              cookOwner: cookOwner,
-                              suitableTimeTags: tags.toList(),
-                              difficulty: difficulty,
-                            ),
-                          );
-                        }
-                        Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.save),
-                      label: const Text('保存'),
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              final name = nameController.text.trim();
+                              if (name.isEmpty) {
+                                return;
+                              }
+                              setSheetState(() => saving = true);
+                              var nextImageUrl = imageUrl;
+                              if (selectedImage != null) {
+                                try {
+                                  nextImageUrl =
+                                      await controller.uploadDishImage(
+                                    bytes: await selectedImage!.readAsBytes(),
+                                    filename: selectedImage!.name,
+                                  );
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text('图片上传失败，请稍后再试')),
+                                    );
+                                  }
+                                  setSheetState(() => saving = false);
+                                  return;
+                                }
+                              }
+                              if (dish == null) {
+                                controller.addDish(
+                                  name: name,
+                                  cookOwner: cookOwner,
+                                  suitableTimeTags: tags.toList(),
+                                  difficulty: difficulty,
+                                  isFavorite: true,
+                                  imageUrl: nextImageUrl,
+                                );
+                              } else {
+                                controller.updateDish(
+                                  dish.id,
+                                  (item) => item.copyWith(
+                                    name: name,
+                                    cookOwner: cookOwner,
+                                    suitableTimeTags: tags.toList(),
+                                    difficulty: difficulty,
+                                    imageUrl: nextImageUrl,
+                                  ),
+                                );
+                              }
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                      icon: saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save),
+                      label: Text(saving ? '保存中' : '保存'),
                     ),
+                    if (dish != null) ...[
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final confirmed = await _confirmDeleteDish(
+                            context,
+                            dish.name,
+                          );
+                          if (!confirmed || !context.mounted) {
+                            return;
+                          }
+                          controller.deleteDish(dish.id);
+                          Navigator.of(context).pop();
+                        },
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('删除这道菜'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.coral,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -470,63 +553,76 @@ class _HomeDishesPageState extends ConsumerState<HomeDishesPage> {
       },
     );
   }
+
+  Future<XFile?> _pickDishImage(ImageSource source) {
+    return ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1800,
+      imageQuality: 85,
+    );
+  }
+
+  Future<bool> _confirmDeleteDish(BuildContext context, String name) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('删除菜品'),
+              content: Text('确定从我们家的菜里删除“$name”吗？历史兑现记录会继续保留。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('再想想'),
+                ),
+                FilledButton.icon(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('删除'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.coral,
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
 }
 
 class _RecommendationCard extends StatelessWidget {
   const _RecommendationCard({
     required this.dishes,
     required this.index,
+    required this.onAddDish,
     required this.onUseTonight,
     required this.onShuffle,
   });
 
   final List<HomeDish> dishes;
   final int index;
+  final VoidCallback onAddDish;
   final ValueChanged<String> onUseTonight;
   final VoidCallback onShuffle;
 
   @override
   Widget build(BuildContext context) {
     final recommendation = _recommendation();
-    return SoftCard(
+    final hasDishes = dishes.isNotEmpty;
+    return MagazineCoverCard(
+      label: '今晚灵感',
+      icon: Icons.ramen_dining_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             height: 154,
-            child: Stack(
-              children: [
-                FoodImageTile(
-                    title: recommendation.title,
-                    height: 154,
-                    icon: Icons.ramen_dining),
-                Positioned(
-                  left: 10,
-                  top: 10,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.bolt,
-                            size: 14, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        Text('适合今天',
-                            style: Theme.of(context).textTheme.labelMedium),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: FoodImageTile(
+              title: recommendation.title,
+              height: 154,
+              icon: Icons.ramen_dining,
             ),
           ),
-          const SizedBox(height: 12),
-          Text('今晚灵感', style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 4),
           Text(recommendation.title,
               style: Theme.of(context).textTheme.titleLarge),
@@ -538,15 +634,21 @@ class _RecommendationCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              FilledButton(
-                  onPressed: () => onUseTonight(recommendation.title),
-                  child: const Text('今晚就吃')),
-              const SizedBox(width: 10),
-              OutlinedButton.icon(
-                onPressed: onShuffle,
-                icon: const Icon(Icons.autorenew),
-                label: const Text('换一换'),
+              FilledButton.icon(
+                onPressed: hasDishes
+                    ? () => onUseTonight(recommendation.title)
+                    : onAddDish,
+                icon: Icon(hasDishes ? Icons.restaurant : Icons.add),
+                label: Text(hasDishes ? '今晚就吃' : '录入菜品'),
               ),
+              if (hasDishes) ...[
+                const SizedBox(width: 10),
+                OutlinedButton.icon(
+                  onPressed: onShuffle,
+                  icon: const Icon(Icons.autorenew),
+                  label: const Text('换一换'),
+                ),
+              ],
             ],
           ),
         ],
@@ -559,8 +661,8 @@ class _RecommendationCard extends StatelessWidget {
     final pool = favorites.isNotEmpty ? favorites : dishes;
     if (pool.isEmpty) {
       return const _DishRecommendation(
-        title: '番茄鸡蛋面 + 凉拌黄瓜',
-        reason: '下班回家的首选，酸甜开胃的番茄汤底配上清爽的凉拌黄瓜，15分钟就能搞定。',
+        title: '先建立我们家的菜谱',
+        reason: '录入常做菜之后，今晚灵感会从真实菜品里推荐，不再靠默认菜单猜。',
       );
     }
 
@@ -592,6 +694,27 @@ class _DishRecommendation {
   final String reason;
 }
 
+class _DishEmptyState extends StatelessWidget {
+  const _DishEmptyState({
+    required this.hasFilters,
+    required this.onAddDish,
+  });
+
+  final bool hasFilters;
+  final VoidCallback onAddDish;
+
+  @override
+  Widget build(BuildContext context) {
+    return MagazineEmptyState(
+      title: hasFilters ? '没有符合条件的菜' : '还没有录入家里的菜',
+      message: hasFilters ? '调整筛选条件，或者把新菜加入菜谱。' : '先录入几道常做菜，今晚推荐才会来自真实记录。',
+      actionLabel: '录入菜品',
+      onAction: onAddDish,
+      icon: Icons.menu_book_outlined,
+    );
+  }
+}
+
 class _FilterTitle extends StatelessWidget {
   const _FilterTitle(this.text);
 
@@ -611,22 +734,30 @@ class _DishCard extends StatelessWidget {
     required this.name,
     required this.subtitle,
     required this.tags,
+    this.imageUrl,
     required this.onEdit,
   });
 
   final String name;
   final String subtitle;
   final List<String> tags;
+  final String? imageUrl;
   final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     return SoftCard(
+      radius: AppRadius.xl,
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FoodImageTile(title: name, height: 120, icon: Icons.local_dining),
+          DishCoverImage(
+            title: name,
+            imageUrl: imageUrl,
+            height: 120,
+            icon: Icons.local_dining,
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -647,6 +778,82 @@ class _DishCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [for (final tag in tags) SoftChip(label: tag)],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DishImagePicker extends StatelessWidget {
+  const _DishImagePicker({
+    required this.title,
+    required this.onPickFromGallery,
+    required this.onTakePhoto,
+    required this.onRemove,
+    this.imageUrl,
+    this.localImage,
+  });
+
+  final String title;
+  final String? imageUrl;
+  final XFile? localImage;
+  final VoidCallback onPickFromGallery;
+  final VoidCallback onTakePhoto;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = localImage != null || (imageUrl?.isNotEmpty ?? false);
+    return SoftCard(
+      color: AppColors.surfaceLow,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (localImage != null)
+            FutureBuilder<Uint8List>(
+              future: localImage!.readAsBytes(),
+              builder: (context, snapshot) {
+                final bytes = snapshot.data;
+                if (bytes == null) {
+                  return FoodImageTile(title: title, height: 130);
+                }
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Image.memory(
+                    bytes,
+                    height: 130,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            )
+          else
+            DishCoverImage(title: title, imageUrl: imageUrl, height: 130),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onPickFromGallery,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(hasImage ? '更换照片' : '添加照片'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onTakePhoto,
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('拍照'),
+              ),
+              if (hasImage)
+                TextButton.icon(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.close),
+                  label: const Text('移除照片'),
+                ),
+            ],
           ),
         ],
       ),

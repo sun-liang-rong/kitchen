@@ -15,8 +15,10 @@ import {
   WishResponseType as PrismaWishResponseType,
   WishStatus as PrismaWishStatus,
   WishType,
+  PointReason,
 } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
+import { RewardsService } from "../rewards/rewards.service";
 
 export type WishStatus =
   | "IN_POOL"
@@ -36,31 +38,11 @@ export type WishResponseType =
   | "SHELVE";
 
 @Injectable()
-export class MvpDataService {
-  readonly coupleId = "demo-couple";
-  readonly users = [
-    { id: "me", nickname: "我", role: "me" as const },
-    { id: "partner", nickname: "她", role: "partner" as const },
-  ];
-
-  constructor(private readonly prisma: PrismaService) {}
-
-  async onModuleInit() {
-    await this.ensureSeed();
-  }
-
-  async listWishes(status?: WishStatus, creatorId?: string) {
-    await this.ensureSeed();
-    return this.prisma.wish.findMany({
-      where: {
-        coupleId: this.coupleId,
-        ...(status ? { status: this.toWishStatus(status) } : {}),
-        ...(creatorId ? { creatorId } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      include: this.wishInclude(),
-    });
-  }
+export class SharedDataService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly rewards: RewardsService,
+  ) {}
 
   async listWishesForUser(
     userId: string,
@@ -87,17 +69,6 @@ export class MvpDataService {
     });
   }
 
-  async getWish(id: string) {
-    const wish = await this.prisma.wish.findUnique({
-      where: { id },
-      include: this.wishInclude(),
-    });
-    if (!wish) {
-      throw new NotFoundException("愿望不存在");
-    }
-    return wish;
-  }
-
   async getWishForUser(userId: string, id: string) {
     const couple = await this.getActiveCoupleForUser(userId);
     const wish = await this.prisma.wish.findFirst({
@@ -110,15 +81,6 @@ export class MvpDataService {
     return wish;
   }
 
-  async deleteWish(id: string) {
-    const wish = await this.findWish(id);
-    if (wish.status === PrismaWishStatus.FULFILLED) {
-      throw new BadRequestException("已兑现的愿望会保留在历史里，不能删除");
-    }
-    await this.deleteWishRecords(id);
-    return { deleted: true, id };
-  }
-
   async deleteWishForUser(userId: string, id: string) {
     const wish = await this.assertWishBelongsToUserCouple(userId, id);
     if (wish.creatorId !== userId) {
@@ -129,38 +91,6 @@ export class MvpDataService {
     }
     await this.deleteWishRecords(id);
     return { deleted: true, id };
-  }
-
-  async createWish(input: {
-    creatorId?: string;
-    title: string;
-    wishType?: string;
-    feelingTags?: string[];
-    desiredTime?: string;
-    intensity?: string;
-    substituteOption?: string;
-    helperTasks?: string[];
-  }) {
-    await this.ensureSeed();
-    if (!input.title?.trim()) {
-      throw new BadRequestException("愿望标题不能为空");
-    }
-
-    return this.prisma.wish.create({
-      data: {
-        coupleId: this.coupleId,
-        creatorId: input.creatorId ?? "me",
-        title: input.title.trim(),
-        wishType: this.toWishType(input.wishType),
-        feelingTags: input.feelingTags ?? [],
-        desiredTime: this.toDesiredTime(input.desiredTime),
-        intensity: this.toWishIntensity(input.intensity),
-        substituteOption: this.toSubstituteOption(input.substituteOption),
-        helperTasks: input.helperTasks ?? [],
-        status: PrismaWishStatus.IN_POOL,
-      },
-      include: this.wishInclude(),
-    });
   }
 
   async createWishForUser(
@@ -201,57 +131,14 @@ export class MvpDataService {
       content: `${this.userName(couple, userId)}许愿：${wish.title}`,
       relatedId: wish.id,
     });
+    await this.rewards.awardForAction({
+      userId,
+      coupleId: couple.id,
+      reason: PointReason.CREATE_WISH,
+      relatedType: "wish",
+      relatedId: wish.id,
+    });
     return wish;
-  }
-
-  async respondToWish(
-    wishId: string,
-    input: {
-      responderId?: string;
-      responseType: WishResponseType;
-      proposedTitle?: string;
-      proposedTime?: string;
-      reasonTags?: string[];
-      reasonText?: string;
-    },
-  ) {
-    const wish = await this.findWish(wishId);
-    if (wish.status === PrismaWishStatus.FULFILLED) {
-      throw new BadRequestException("已兑现的愿望不能再次回应");
-    }
-    this.assertCanRespond(wish.status);
-
-    const responseType = this.toWishResponseType(input.responseType);
-    const response = await this.prisma.wishResponse.create({
-      data: {
-        wishId,
-        responderId: input.responderId ?? "partner",
-        responseType,
-        proposedTitle: input.proposedTitle,
-        proposedTime: this.toDesiredTime(input.proposedTime),
-        reasonTags: input.reasonTags ?? [],
-        reasonText: input.reasonText,
-      },
-    });
-
-    const updatedWish = await this.prisma.wish.update({
-      where: { id: wishId },
-      data: {
-        currentResponseId: response.id,
-        status: this.statusForResponse(responseType),
-      },
-      include: this.wishInclude(),
-    });
-    await this.prisma.notification.create({
-      data: {
-        userId: wish.creatorId,
-        type: NotificationType.WISH_RESPONDED,
-        title: "愿望有回应了",
-        content: `${this.responseTypeText(responseType)}：${wish.title}`,
-        relatedId: wish.id,
-      },
-    });
-    return updatedWish;
   }
 
   async respondToWishForUser(
@@ -287,7 +174,7 @@ export class MvpDataService {
       },
     });
 
-    return this.prisma.wish.update({
+    const updatedWish = await this.prisma.wish.update({
       where: { id: wishId },
       data: {
         currentResponseId: response.id,
@@ -295,48 +182,13 @@ export class MvpDataService {
       },
       include: this.wishInclude(),
     });
-  }
-
-  async confirmResponse(responseId: string) {
-    const response = await this.prisma.wishResponse.findUnique({
-      where: { id: responseId },
+    await this.rewards.awardForAction({
+      userId,
+      reason: PointReason.RESPOND_WISH,
+      relatedType: "wish_response",
+      relatedId: response.id,
     });
-    if (!response) {
-      throw new NotFoundException("回应不存在");
-    }
-    const wish = await this.findWish(response.wishId);
-    this.assertCurrentPendingResponse(wish, response.id);
-
-    await this.prisma.wishResponse.update({
-      where: { id: responseId },
-      data: { confirmedAt: new Date() },
-    });
-
-    return this.prisma.wish.update({
-      where: { id: response.wishId },
-      data: { status: this.confirmedStatusForResponse(response.responseType) },
-      include: this.wishInclude(),
-    });
-  }
-
-  async reopenResponse(responseId: string) {
-    const response = await this.prisma.wishResponse.findUnique({
-      where: { id: responseId },
-    });
-    if (!response) {
-      throw new NotFoundException("回应不存在");
-    }
-    const wish = await this.findWish(response.wishId);
-    this.assertCurrentPendingResponse(wish, response.id);
-
-    return this.prisma.wish.update({
-      where: { id: response.wishId },
-      data: {
-        currentResponseId: null,
-        status: PrismaWishStatus.IN_POOL,
-      },
-      include: this.wishInclude(),
-    });
+    return updatedWish;
   }
 
   async confirmResponseForUser(userId: string, responseId: string) {
@@ -371,6 +223,12 @@ export class MvpDataService {
         content: `愿望已确认：${response.wish.title}`,
         relatedId: response.wishId,
       },
+    });
+    await this.rewards.awardForAction({
+      userId,
+      reason: PointReason.CONFIRM_RESPONSE,
+      relatedType: "wish_response",
+      relatedId: response.id,
     });
     return updatedWish;
   }
@@ -409,64 +267,6 @@ export class MvpDataService {
     return updatedWish;
   }
 
-  async fulfillWish(
-    wishId: string,
-    input: {
-      fulfillerId?: string;
-      actualDishName: string;
-      helperTasksDone?: string[];
-      feedbackTags?: string[];
-      note?: string;
-      addToDishes?: boolean;
-    },
-  ) {
-    const wish = await this.findWish(wishId);
-    if (!input.actualDishName?.trim()) {
-      throw new BadRequestException("实际吃了什么不能为空");
-    }
-    this.assertCanFulfill(wish.status);
-
-    const fulfillment = await this.prisma.wishFulfillment.upsert({
-      where: { wishId },
-      create: {
-        wishId,
-        fulfillerId: input.fulfillerId ?? "partner",
-        actualDishName: input.actualDishName.trim(),
-        helperTasksDone: input.helperTasksDone ?? [],
-        feedbackTags: input.feedbackTags ?? [],
-        note: input.note,
-        addToDishes: input.addToDishes ?? false,
-      },
-      update: {
-        fulfillerId: input.fulfillerId ?? "partner",
-        actualDishName: input.actualDishName.trim(),
-        helperTasksDone: input.helperTasksDone ?? [],
-        feedbackTags: input.feedbackTags ?? [],
-        note: input.note,
-        addToDishes: input.addToDishes ?? false,
-      },
-    });
-
-    if (fulfillment.addToDishes) {
-      await this.createDish({
-        name: fulfillment.actualDishName,
-        cookOwner: fulfillment.fulfillerId,
-        suitableTimeTags: [wish.desiredTime ?? DesiredTime.SOMEDAY],
-        tasteTags: fulfillment.feedbackTags,
-        isFavorite: true,
-        sourceWishId: wish.id,
-        lastFeedback: fulfillment.feedbackTags.join("、"),
-      });
-    }
-
-    const updatedWish = await this.prisma.wish.update({
-      where: { id: wishId },
-      data: { status: PrismaWishStatus.FULFILLED },
-      include: this.wishInclude(),
-    });
-    return { wish: updatedWish, fulfillment };
-  }
-
   async fulfillWishForUser(
     userId: string,
     wishId: string,
@@ -476,6 +276,7 @@ export class MvpDataService {
       feedbackTags?: string[];
       note?: string;
       addToDishes?: boolean;
+      imageUrl?: string;
     },
   ) {
     const couple = await this.getActiveCoupleForUser(userId);
@@ -520,6 +321,7 @@ export class MvpDataService {
         isFavorite: true,
         sourceWishId: wish.id,
         lastFeedback: fulfillment.feedbackTags.join("、"),
+        imageUrl: input.imageUrl,
       });
     }
 
@@ -541,16 +343,15 @@ export class MvpDataService {
         relatedId: wish.id,
       },
     });
+    await this.rewards.awardForAction({
+      userId,
+      coupleId: couple.id,
+      reason: PointReason.FULFILL_WISH,
+      relatedType: "wish",
+      relatedId: wish.id,
+    });
 
     return { wish: updatedWish, fulfillment };
-  }
-
-  async listFulfillments() {
-    await this.ensureSeed();
-    return this.prisma.wishFulfillment.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { wish: true },
-    });
   }
 
   async listFulfillmentsForUser(userId: string) {
@@ -559,43 +360,6 @@ export class MvpDataService {
       where: { wish: { coupleId: couple.id } },
       orderBy: { createdAt: "desc" },
       include: { wish: true },
-    });
-  }
-
-  async listDishes(filter?: {
-    suitableTimeTag?: string;
-    cookOwner?: string;
-    q?: string;
-    difficulty?: string;
-    isFavorite?: boolean;
-  }) {
-    await this.ensureSeed();
-    const q = filter?.q?.trim();
-    return this.prisma.dish.findMany({
-      where: {
-        coupleId: this.coupleId,
-        ...(filter?.suitableTimeTag
-          ? { suitableTimeTags: { has: filter.suitableTimeTag } }
-          : {}),
-        ...(filter?.cookOwner ? { cookOwner: filter.cookOwner } : {}),
-        ...(filter?.difficulty
-          ? { difficulty: this.toDishDifficulty(filter.difficulty) }
-          : {}),
-        ...(typeof filter?.isFavorite === "boolean"
-          ? { isFavorite: filter.isFavorite }
-          : {}),
-        ...(q
-          ? {
-              OR: [
-                { name: { contains: q, mode: "insensitive" as const } },
-                { lastFeedback: { contains: q, mode: "insensitive" as const } },
-                { tasteTags: { has: q } },
-                { suitableTimeTags: { has: q } },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -639,51 +403,6 @@ export class MvpDataService {
     });
   }
 
-  async createDish(input: {
-    name: string;
-    cookOwner?: string;
-    suitableTimeTags?: string[];
-    difficulty?: string;
-    tasteTags?: string[];
-    isFavorite?: boolean;
-    sourceWishId?: string;
-    lastFeedback?: string;
-  }) {
-    await this.ensureSeed();
-    if (!input.name?.trim()) {
-      throw new BadRequestException("菜名不能为空");
-    }
-
-    const existing = await this.prisma.dish.findFirst({
-      where: { coupleId: this.coupleId, name: input.name.trim() },
-    });
-
-    const data = {
-      cookOwner: input.cookOwner,
-      suitableTimeTags: input.suitableTimeTags ?? [],
-      difficulty: this.toDishDifficulty(input.difficulty),
-      tasteTags: input.tasteTags ?? [],
-      isFavorite: input.isFavorite ?? false,
-      sourceWishId: input.sourceWishId,
-      lastFeedback: input.lastFeedback,
-    };
-
-    if (existing) {
-      return this.prisma.dish.update({
-        where: { id: existing.id },
-        data,
-      });
-    }
-
-    return this.prisma.dish.create({
-      data: {
-        coupleId: this.coupleId,
-        name: input.name.trim(),
-        ...data,
-      },
-    });
-  }
-
   async createDishForUser(
     userId: string,
     input: {
@@ -695,6 +414,7 @@ export class MvpDataService {
       isFavorite?: boolean;
       sourceWishId?: string;
       lastFeedback?: string;
+      imageUrl?: string;
     },
   ) {
     const couple = await this.getActiveCoupleForUser(userId);
@@ -713,55 +433,28 @@ export class MvpDataService {
       isFavorite: input.isFavorite ?? false,
       sourceWishId: input.sourceWishId,
       lastFeedback: input.lastFeedback,
+      imageUrl: this.cleanOptionalString(input.imageUrl),
     };
 
     if (existing) {
       return this.prisma.dish.update({ where: { id: existing.id }, data });
     }
 
-    return this.prisma.dish.create({
+    const dish = await this.prisma.dish.create({
       data: {
         coupleId: couple.id,
         name: input.name.trim(),
         ...data,
       },
     });
-  }
-
-  async updateDish(id: string, input: { [key: string]: unknown }) {
-    const dish = await this.prisma.dish.findUnique({ where: { id } });
-    if (!dish) {
-      throw new NotFoundException("菜不存在");
-    }
-
-    return this.prisma.dish.update({
-      where: { id },
-      data: {
-        name: typeof input.name === "string" ? input.name : undefined,
-        cookOwner:
-          typeof input.cookOwner === "string" ? input.cookOwner : undefined,
-        suitableTimeTags: Array.isArray(input.suitableTimeTags)
-          ? input.suitableTimeTags.filter(
-              (item): item is string => typeof item === "string",
-            )
-          : undefined,
-        difficulty:
-          typeof input.difficulty === "string"
-            ? this.toDishDifficulty(input.difficulty)
-            : undefined,
-        tasteTags: Array.isArray(input.tasteTags)
-          ? input.tasteTags.filter(
-              (item): item is string => typeof item === "string",
-            )
-          : undefined,
-        isFavorite:
-          typeof input.isFavorite === "boolean" ? input.isFavorite : undefined,
-        lastFeedback:
-          typeof input.lastFeedback === "string"
-            ? input.lastFeedback
-            : undefined,
-      },
+    await this.rewards.awardForAction({
+      userId,
+      coupleId: couple.id,
+      reason: PointReason.ADD_DISH,
+      relatedType: "dish",
+      relatedId: dish.id,
     });
+    return dish;
   }
 
   async updateDishForUser(
@@ -803,21 +496,25 @@ export class MvpDataService {
           typeof input.lastFeedback === "string"
             ? input.lastFeedback
             : undefined,
+        imageUrl:
+          typeof input.imageUrl === "string"
+            ? this.cleanOptionalString(input.imageUrl)
+            : undefined,
       },
     });
   }
 
-  async getKitchenStatuses() {
-    await this.ensureSeed();
-    const statuses = await this.prisma.kitchenStatus.findMany({
-      where: { userId: { in: this.users.map((user) => user.id) } },
-      orderBy: { updatedAt: "desc" },
+  async deleteDishForUser(userId: string, id: string) {
+    const couple = await this.getActiveCoupleForUser(userId);
+    const dish = await this.prisma.dish.findFirst({
+      where: { id, coupleId: couple.id },
     });
+    if (!dish) {
+      throw new NotFoundException("菜不存在");
+    }
 
-    return this.users.map((user) => ({
-      user,
-      status: statuses.find((status) => status.userId === user.id),
-    }));
+    await this.prisma.dish.delete({ where: { id } });
+    return { deleted: true, id };
   }
 
   async getKitchenStatusesForUser(userId: string) {
@@ -832,27 +529,6 @@ export class MvpDataService {
       user,
       status: statuses.find((status) => status.userId === user.id),
     }));
-  }
-
-  async setKitchenStatus(userId: string, status: string, note?: string) {
-    await this.ensureSeed();
-    if (!this.users.some((user) => user.id === userId)) {
-      throw new NotFoundException("用户不存在");
-    }
-
-    return this.prisma.kitchenStatus.upsert({
-      where: { userId_date: { userId, date: this.today() } },
-      create: {
-        userId,
-        status: this.toKitchenStatus(status),
-        note,
-        date: this.today(),
-      },
-      update: {
-        status: this.toKitchenStatus(status),
-        note,
-      },
-    });
   }
 
   async setKitchenStatusForUser(userId: string, status: string, note?: string) {
@@ -870,92 +546,6 @@ export class MvpDataService {
         note,
       },
     });
-  }
-
-  async resetDemoData() {
-    await this.prisma.notification.deleteMany({});
-    await this.prisma.dish.updateMany({ data: { sourceWishId: null } });
-    await this.prisma.dish.deleteMany({});
-    await this.prisma.wish.updateMany({ data: { currentResponseId: null } });
-    await this.prisma.wishFulfillment.deleteMany({});
-    await this.prisma.wishResponse.deleteMany({});
-    await this.prisma.wish.deleteMany({});
-    await this.prisma.kitchenStatus.deleteMany({});
-    await this.prisma.coupleInvite.deleteMany({});
-    await this.prisma.couple.deleteMany({});
-    await this.prisma.user.deleteMany({});
-    await this.ensureSeed();
-  }
-
-  private async ensureSeed() {
-    const existingCouple = await this.prisma.couple.findUnique({
-      where: { id: this.coupleId },
-    });
-    if (existingCouple) {
-      return;
-    }
-
-    await this.prisma.user.createMany({
-      data: [
-        { id: "me", nickname: "我" },
-        { id: "partner", nickname: "她" },
-      ],
-      skipDuplicates: true,
-    });
-
-    await this.prisma.couple.upsert({
-      where: { id: this.coupleId },
-      create: {
-        id: this.coupleId,
-        userAId: "me",
-        userBId: "partner",
-      },
-      update: {
-        userAId: "me",
-        userBId: "partner",
-        status: "ACTIVE",
-      },
-    });
-
-    await this.setKitchenStatus("me", "NORMAL", "今天正常做饭");
-    await this.setKitchenStatus("partner", "TIRED", "她今天有点累，适合简单点");
-
-    await this.createWish({
-      creatorId: "partner",
-      title: "可乐鸡翅",
-      wishType: "DISH",
-      desiredTime: "TONIGHT",
-      intensity: "VERY_TODAY",
-      substituteOption: "LIGHT_VERSION_OK",
-      helperTasks: ["洗菜", "饭后收桌"],
-    });
-    await this.createWish({
-      creatorId: "me",
-      title: "今晚想喝汤",
-      wishType: "FEELING",
-      feelingTags: ["有汤", "热乎一点"],
-      desiredTime: "THIS_WEEK",
-      intensity: "THIS_WEEK",
-      substituteOption: "WHAT_WE_HAVE_OK",
-      helperTasks: ["洗碗"],
-    });
-
-    await this.createDish({
-      name: "番茄鸡蛋面",
-      cookOwner: "me",
-      suitableTimeTags: ["TONIGHT", "SIMPLE_ONLY"],
-      difficulty: "EASY",
-      tasteTags: ["热乎", "快手"],
-      isFavorite: true,
-    });
-  }
-
-  private async findWish(id: string) {
-    const wish = await this.prisma.wish.findUnique({ where: { id } });
-    if (!wish) {
-      throw new NotFoundException("愿望不存在");
-    }
-    return wish;
   }
 
   private async deleteWishRecords(id: string) {
@@ -1182,5 +772,10 @@ export class MvpDataService {
     return value && value in DishDifficulty
       ? (value as DishDifficulty)
       : DishDifficulty.NORMAL;
+  }
+
+  private cleanOptionalString(value?: string) {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
   }
 }

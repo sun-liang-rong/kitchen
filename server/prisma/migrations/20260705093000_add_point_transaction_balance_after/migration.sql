@@ -1,0 +1,2 @@
+ALTER TABLE "point_transactions"
+ADD COLUMN IF NOT EXISTS "balance_after" INTEGER NOT NULL DEFAULT 0;

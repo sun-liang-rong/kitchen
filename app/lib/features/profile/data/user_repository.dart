@@ -12,17 +12,33 @@ class UserRepository {
   Future<AuthUser> updateMe({
     String? nickname,
     String? avatarUrl,
+    bool clearAvatar = false,
     UserGender? gender,
   }) async {
     final response = await _dio.patch<Object?>(
       '/users/me',
       data: {
         if (nickname != null) 'nickname': nickname,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        if (clearAvatar) 'avatarUrl': null,
+        if (!clearAvatar && avatarUrl != null) 'avatarUrl': avatarUrl,
         if (gender != null) 'gender': userGenderToApi(gender),
       },
     );
     return _userFromJson(_parseData(response));
+  }
+
+  Future<String> uploadAvatar({
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final response = await _dio.post<Object?>(
+      '/upload/avatar',
+      data: FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
+      }),
+    );
+    final data = _parseMap(_parseData(response));
+    return data['url']?.toString() ?? '';
   }
 }
 

@@ -1,28 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { MvpDataService, WishStatus } from '../mvp_data/mvp-data.service';
+import { SharedDataService, WishStatus } from '../shared_data/shared-data.service';
 import { CreateWishDto } from './dto/create-wish.dto';
 
 @Injectable()
 export class WishesService {
-  constructor(private readonly data: MvpDataService) {}
+  constructor(private readonly data: SharedDataService) {}
 
-  findAll(status?: WishStatus, userId?: string, creator?: 'me' | 'partner') {
-    if (userId) {
-      return this.data.listWishesForUser(userId, status, creator);
-    }
-    const demoCreatorId = creator === 'me' ? 'me' : creator === 'partner' ? 'partner' : undefined;
-    return this.data.listWishes(status, demoCreatorId);
+  findAll(userId: string, status?: WishStatus, creator?: 'me' | 'partner') {
+    return this.data.listWishesForUser(userId, status, creator);
   }
 
-  findOne(id: string, userId?: string) {
-    return userId ? this.data.getWishForUser(userId, id) : this.data.getWish(id);
+  findOne(userId: string, id: string) {
+    return this.data.getWishForUser(userId, id);
   }
 
-  create(dto: CreateWishDto, userId?: string) {
-    return userId ? this.data.createWishForUser(userId, dto) : this.data.createWish(dto);
+  create(userId: string, dto: CreateWishDto) {
+    return this.data.createWishForUser(userId, dto);
   }
 
-  remove(id: string, userId?: string) {
-    return userId ? this.data.deleteWishForUser(userId, id) : this.data.deleteWish(id);
+  remove(userId: string, id: string) {
+    return this.data.deleteWishForUser(userId, id);
   }
 }

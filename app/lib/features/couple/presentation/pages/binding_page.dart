@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/ui/design_tokens.dart';
 import '../../../../shared/widgets/soft_components.dart';
+import '../../../auth/domain/auth_models.dart';
 import '../../../auth/presentation/providers/session_controller.dart';
 import '../../domain/couple_models.dart';
 
@@ -48,41 +49,58 @@ class _BindingPageState extends ConsumerState<BindingPage> {
         const CoupleBinding(status: CoupleBindingStatus.unbound);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () =>
-              ref.read(sessionControllerProvider.notifier).refreshBinding(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            children: [
-              WarmTopBar(
-                title: '绑定另一半',
-                subtitle: session?.user == null
-                    ? '完成登录后继续绑定。'
-                    : '${session!.user!.nickname}，把厨房许愿池交给两个人。',
-                leading: const CircleAvatar(
-                  backgroundColor: AppColors.surfaceHigh,
-                  child: Icon(Icons.favorite_border, color: AppColors.primary),
-                ),
-                actions: [
-                  IconButton(
-                    tooltip: '退出登录',
-                    onPressed: () =>
-                        ref.read(sessionControllerProvider.notifier).logout(),
-                    icon: const Icon(Icons.logout),
+        child: Stack(
+          children: [
+            const KitchenIllustrationBackground(),
+            RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(sessionControllerProvider.notifier).refreshBinding(),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                children: [
+                  MagazineHeader(
+                    title: '绑定另一半',
+                    kicker: 'Shared Kitchen',
+                    subtitle: session?.user == null
+                        ? '完成登录后继续绑定。'
+                        : '${session!.user!.nickname}，把厨房许愿池交给两个人。',
+                    leadingIcon: Icons.favorite_border_rounded,
+                    actions: [
+                      IconButton(
+                        tooltip: '退出登录',
+                        onPressed: () => ref
+                            .read(sessionControllerProvider.notifier)
+                            .logout(),
+                        icon: const Icon(Icons.logout),
+                      ),
+                    ],
                   ),
+                  MagazineCoverCard(
+                    label: binding.status == CoupleBindingStatus.bound
+                        ? '双人饭桌已连线'
+                        : '把邀请码递给对方',
+                    icon: Icons.favorite_rounded,
+                    child: Text(
+                      binding.status == CoupleBindingStatus.bound
+                          ? '现在可以一起许愿、一起接住晚饭灵感。'
+                          : '生成或输入邀请码，让两个人进入同一本厨房日记。',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _statusCard(binding),
+                  if (binding.status != CoupleBindingStatus.bound) ...[
+                    const SizedBox(height: 14),
+                    _generateCard(),
+                    const SizedBox(height: 14),
+                    _applyCard(),
+                  ],
                 ],
               ),
-              const SizedBox(height: 16),
-              _statusCard(binding),
-              if (binding.status != CoupleBindingStatus.bound) ...[
-                const SizedBox(height: 14),
-                _generateCard(),
-                const SizedBox(height: 14),
-                _applyCard(),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -104,6 +122,7 @@ class _BindingPageState extends ConsumerState<BindingPage> {
     };
 
     return SoftCard(
+      radius: AppRadius.xl,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,6 +187,7 @@ class _BindingPageState extends ConsumerState<BindingPage> {
     final binding = ref.watch(sessionControllerProvider).valueOrNull?.binding;
     final code = _generatedInvite?.code ?? binding?.activeInvite?.code;
     return SoftCard(
+      radius: AppRadius.xl,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,6 +248,7 @@ class _BindingPageState extends ConsumerState<BindingPage> {
 
   Widget _applyCard() {
     return SoftCard(
+      radius: AppRadius.xl,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -375,15 +396,11 @@ class _BoundPartnerCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          UserAvatar(
             radius: 24,
+            avatarUrl: partner?.avatarUrl,
+            gender: partner?.gender ?? UserGender.unspecified,
             backgroundColor: AppColors.surfaceHigh,
-            backgroundImage: partner?.avatarUrl == null
-                ? null
-                : NetworkImage(partner!.avatarUrl!),
-            child: partner?.avatarUrl == null
-                ? const Icon(Icons.favorite, color: AppColors.primary)
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -394,9 +411,7 @@ class _BoundPartnerCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  binding.coupleId == null
-                      ? '共享厨房已开启'
-                      : '共享关系：${binding.coupleId}',
+                  '共享厨房已开启',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/ui/design_tokens.dart';
 import '../../../../shared/widgets/soft_components.dart';
+import '../../../spirit/presentation/widgets/spirit_overlay_scaffold.dart';
 import '../providers/wish_pool_controller.dart';
 
 class FulfillmentRecordsPage extends ConsumerWidget {
@@ -27,48 +28,37 @@ class FulfillmentRecordsPage extends ConsumerWidget {
         ),
     ];
 
-    return Scaffold(
-      bottomNavigationBar: const AppBottomNav(current: 'records'),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
-          children: [
-            WarmTopBar(
-              title: '厨房许愿池',
-              leading: const CircleAvatar(
-                radius: 13,
-                backgroundColor: AppColors.surfaceHigh,
-                child:
-                    Icon(Icons.restaurant, size: 14, color: AppColors.primary),
-              ),
-              actions: const [NotificationBell()],
-              centerTitle: true,
+    return SpiritOverlayScaffold(
+      child: MagazineScaffold(
+        bottomNavigationBar: const AppBottomNav(current: 'records'),
+        children: [
+          const MagazineHeader(
+            title: '兑现记录',
+            kicker: 'Dinner Diary',
+            subtitle: '每顿饭都留下一点有用的记忆。',
+            leadingIcon: Icons.history_edu_rounded,
+            actions: [NotificationBell()],
+          ),
+          MagazineCoverCard(
+            label: '最近7天',
+            icon: Icons.schedule_rounded,
+            child: Text(
+              records.isEmpty ? '还没有新的饭后回忆。' : '这些愿望，已经变成了饭桌上的记忆。',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 10),
-            Text('兑现记录', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 4),
-            Text('每顿饭都留下一点有用的记忆。',
-                style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                const Icon(Icons.schedule, size: 17, color: AppColors.blueGray),
-                const SizedBox(width: 6),
-                Text('最近7天', style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (records.isEmpty)
-              const SoftCard(
-                padding: EdgeInsets.symmetric(vertical: 44, horizontal: 18),
-                child: Center(child: Text('还没有兑现记录')),
-              )
-            else
-              for (var i = 0; i < records.length; i++)
-                _TimelineRecord(
-                    record: records[i], isLast: i == records.length - 1),
-          ],
-        ),
+          ),
+          const SizedBox(height: 18),
+          if (records.isEmpty)
+            const MagazineEmptyState(
+              title: '还没有兑现记录',
+              message: '愿望被吃到之后，会在这里变成一页饭后回忆。',
+              icon: Icons.local_dining_rounded,
+            )
+          else
+            for (var i = 0; i < records.length; i++)
+              _TimelineRecord(
+                  record: records[i], isLast: i == records.length - 1),
+        ],
       ),
     );
   }
@@ -117,6 +107,7 @@ class _TimelineRecord extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: SoftCard(
+              radius: AppRadius.xl,
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

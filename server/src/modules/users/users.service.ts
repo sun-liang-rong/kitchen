@@ -1,6 +1,10 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 
 @Injectable()
 export class UsersService {
@@ -12,7 +16,7 @@ export class UsersService {
       select: this.publicSelect(),
     });
     if (!user) {
-      throw new UnauthorizedException('登录已失效');
+      throw new UnauthorizedException("登录已失效");
     }
     return user;
   }
@@ -20,14 +24,17 @@ export class UsersService {
   async updateMe(userId: string, dto: UpdateProfileDto) {
     const nickname = dto.nickname?.trim();
     if (dto.nickname !== undefined && !nickname) {
-      throw new BadRequestException('昵称不能为空');
+      throw new BadRequestException("昵称不能为空");
     }
 
     return this.prisma.user.update({
       where: { id: userId },
       data: {
         nickname,
-        avatarUrl: dto.avatarUrl?.trim() || undefined,
+        avatarUrl:
+          dto.avatarUrl === undefined
+            ? undefined
+            : dto.avatarUrl.trim() || null,
         gender: dto.gender,
       },
       select: this.publicSelect(),

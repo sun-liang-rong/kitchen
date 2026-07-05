@@ -160,6 +160,7 @@ class WishPoolRepository {
     required List<String> feedbackTags,
     String? note,
     required bool addToDishes,
+    String? imageUrl,
   }) async {
     final response = await _dio.post<Object?>(
       '/wish-fulfillments/wishes/$wishId',
@@ -169,6 +170,7 @@ class WishPoolRepository {
         'feedbackTags': feedbackTags,
         if (note != null && note.isNotEmpty) 'note': note,
         'addToDishes': addToDishes,
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
       },
     );
     final data = _parseMap(_parseData(response));
@@ -182,6 +184,7 @@ class WishPoolRepository {
     required String difficulty,
     required List<String> tasteTags,
     required bool isFavorite,
+    String? imageUrl,
   }) async {
     final response = await _dio.post<Object?>(
       '/dishes',
@@ -192,6 +195,7 @@ class WishPoolRepository {
         'difficulty': _difficultyToApi(difficulty),
         'tasteTags': tasteTags,
         'isFavorite': isFavorite,
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
       },
     );
     return _dishFromJson(_parseData(response));
@@ -209,9 +213,28 @@ class WishPoolRepository {
         'tasteTags': dish.tasteTags,
         'isFavorite': dish.isFavorite,
         if (dish.lastFeedback != null) 'lastFeedback': dish.lastFeedback,
+        'imageUrl': dish.imageUrl ?? '',
       },
     );
     return _dishFromJson(_parseData(response));
+  }
+
+  Future<String> uploadDishImage({
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final response = await _dio.post<Object?>(
+      '/upload/dish-image',
+      data: FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
+      }),
+    );
+    final data = _parseMap(_parseData(response));
+    return data['url']?.toString() ?? '';
+  }
+
+  Future<void> deleteDish(String id) async {
+    await _dio.delete<Object?>('/dishes/$id');
   }
 
   Future<KitchenStatusEntry> setKitchenStatus(
@@ -361,6 +384,7 @@ HomeDish _dishFromJson(Object? value) {
     isFavorite: json['isFavorite'] == true,
     sourceWishId: json['sourceWishId']?.toString(),
     lastFeedback: json['lastFeedback']?.toString(),
+    imageUrl: json['imageUrl']?.toString(),
     createdAt: _dateFromJson(json['createdAt']),
     updatedAt: _dateFromJson(json['updatedAt']),
   );

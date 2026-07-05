@@ -5,8 +5,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 type PublicUser = {
   id: string;
   nickname: string;
-  email: string | null;
-  phone: string | null;
   avatarUrl: string | null;
   gender: string;
 };
@@ -269,8 +267,6 @@ export class CouplesService {
     return {
       id: true,
       nickname: true,
-      email: true,
-      phone: true,
       avatarUrl: true,
       gender: true,
     };

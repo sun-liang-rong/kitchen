@@ -1,14 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtUser } from '../auth/jwt.strategy';
 import { ApplyByCodeDto } from './dto/apply-by-code.dto';
 import { CouplesService } from './couples.service';
 
 @ApiTags('couples')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('couples')
 export class CouplesController {
   constructor(private readonly couplesService: CouplesService) {}

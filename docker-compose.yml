@@ -9,9 +9,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       API_PREFIX: api
-      DATABASE_URL: postgresql://kitchen:kitchen@postgres:5432/kitchen_wish_well?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kitchen}:${POSTGRES_PASSWORD:-kitchen}@postgres:5432/${POSTGRES_DB:-kitchen_wish_well}?schema=public
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:-dev-kitchen-wish-well-secret}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       STORAGE_DRIVER: local
     ports:
       - "3000:3000"
@@ -20,15 +22,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - server_uploads:/app/uploads
 
   postgres:
     image: postgres:16-alpine
     container_name: kitchen-wish-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: kitchen_wish_well
-      POSTGRES_USER: kitchen
-      POSTGRES_PASSWORD: kitchen
+      POSTGRES_DB: ${POSTGRES_DB:-kitchen_wish_well}
+      POSTGRES_USER: ${POSTGRES_USER:-kitchen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kitchen}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -41,6 +47,8 @@ services:
     image: redis:7-alpine
     container_name: kitchen-wish-redis
     restart: unless-stopped
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -52,3 +60,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  server_uploads:

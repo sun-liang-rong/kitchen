@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { MvpDataService } from '../mvp_data/mvp-data.service';
+import { SharedDataService } from '../shared_data/shared-data.service';
 import { SetKitchenStatusDto } from './dto/set-kitchen-status.dto';
 
 @Injectable()
 export class KitchenStatusService {
-  constructor(private readonly data: MvpDataService) {}
+  constructor(private readonly data: SharedDataService) {}
 
-  findAll(userId?: string) {
-    return userId ? this.data.getKitchenStatusesForUser(userId) : this.data.getKitchenStatuses();
+  findAll(userId: string) {
+    return this.data.getKitchenStatusesForUser(userId);
   }
 
-  set(dto: SetKitchenStatusDto, userId?: string) {
-    return userId
-      ? this.data.setKitchenStatusForUser(userId, dto.status, dto.note)
-      : this.data.setKitchenStatus(dto.userId ?? 'me', dto.status, dto.note);
+  set(userId: string, dto: SetKitchenStatusDto) {
+    return this.data.setKitchenStatusForUser(userId, dto.status, dto.note);
   }
 }

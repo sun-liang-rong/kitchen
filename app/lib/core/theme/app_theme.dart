@@ -23,7 +23,7 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.text,
         elevation: 0,
         centerTitle: true,
@@ -37,26 +37,34 @@ class AppTheme {
           color: AppColors.text,
         ),
         titleLarge: TextStyle(
-          fontSize: 20,
-          height: 28 / 20,
+          fontSize: 24,
+          height: 32 / 24,
           fontWeight: FontWeight.w600,
           color: AppColors.text,
         ),
         titleMedium: TextStyle(
-          fontSize: 16,
-          height: 24 / 16,
-          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          height: 26 / 18,
+          fontWeight: FontWeight.w500,
           color: AppColors.text,
         ),
         bodyLarge:
             TextStyle(fontSize: 18, height: 28 / 18, color: AppColors.text),
-        bodyMedium:
-            TextStyle(fontSize: 16, height: 24 / 16, color: AppColors.text),
+        bodyMedium: TextStyle(
+          fontSize: 15,
+          height: 23 / 15,
+          fontWeight: FontWeight.w400,
+          color: AppColors.text,
+        ),
         bodySmall: TextStyle(
-            fontSize: 14, height: 20 / 14, color: AppColors.textMuted),
+          fontSize: 15,
+          height: 22 / 15,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textMuted,
+        ),
         labelMedium: TextStyle(
-          fontSize: 12,
-          height: 16 / 12,
+          fontSize: 13,
+          height: 18 / 13,
           letterSpacing: 0,
           color: AppColors.textMuted,
         ),
@@ -76,21 +84,21 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.paper,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: const BorderSide(color: AppColors.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: AppColors.outline.withValues(alpha: 0.65),
+            color: AppColors.outline.withValues(alpha: 0.76),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
         ),
       ),
@@ -100,11 +108,12 @@ class AppTheme {
           foregroundColor: AppColors.onPrimary,
           disabledBackgroundColor: AppColors.surfaceHigh,
           disabledForegroundColor: AppColors.textMuted,
-          minimumSize: const Size(0, 50),
+          minimumSize: const Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
           ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -175,9 +184,9 @@ class AppTheme {
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.paper,
         surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: AppColors.surface,
+        modalBackgroundColor: AppColors.paper,
         showDragHandle: true,
         dragHandleColor: AppColors.outline,
         shape: RoundedRectangleBorder(

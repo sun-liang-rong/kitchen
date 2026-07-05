@@ -13,7 +13,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [boundSessionOverride, notificationsOverride],
+        overrides: [
+          boundSessionOverride,
+          notificationsOverride,
+          seededWishPoolOverride,
+        ],
         child: const KitchenWishWellApp(),
       ),
     );

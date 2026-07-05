@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kitchen_wish_well/features/wish_pool/data/wish_pool_repository.dart';
 import 'package:kitchen_wish_well/features/wish_pool/domain/models/kitchen_models.dart';
 import 'package:kitchen_wish_well/features/wish_pool/presentation/providers/wish_pool_controller.dart';
 
@@ -61,8 +62,11 @@ void main() {
     addTearDown(container.dispose);
 
     final notifier = container.read(wishPoolControllerProvider.notifier);
-    final initial = container.read(wishPoolControllerProvider);
-    expect(initial.visibleWishes.length, 2);
+    final partner = container.read(wishPoolControllerProvider).partner;
+    notifier.createWish(title: '我想喝汤');
+    notifier.createWish(title: '她想吃面', creatorId: partner.id);
+
+    expect(container.read(wishPoolControllerProvider).visibleWishes.length, 2);
 
     notifier.selectCreator(WishCreatorFilter.me);
     final mine = container.read(wishPoolControllerProvider);
@@ -129,6 +133,42 @@ void main() {
             .wishes
             .any((item) => item.id == wish.id),
         false);
+  });
+
+  test('deletes a home dish from state', () {
+    final controller = WishPoolController();
+    final container = ProviderContainer(
+      overrides: [
+        wishPoolControllerProvider.overrideWith(() => controller),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(wishPoolControllerProvider.notifier);
+    final dish = notifier.addDish(
+      name: '酸辣土豆丝',
+      suitableTimeTags: const ['今晚'],
+      difficulty: '简单',
+      isFavorite: true,
+      imageUrl: '/uploads/dishes/potato.webp',
+    );
+    expect(dish.imageUrl, '/uploads/dishes/potato.webp');
+    expect(
+      container
+          .read(wishPoolControllerProvider)
+          .dishes
+          .any((item) => item.id == dish.id),
+      true,
+    );
+
+    notifier.deleteDish(dish.id);
+    expect(
+      container
+          .read(wishPoolControllerProvider)
+          .dishes
+          .any((item) => item.id == dish.id),
+      false,
+    );
   });
 
   test('does not confirm or reopen another user wish', () {
@@ -257,4 +297,61 @@ void main() {
       throwsStateError,
     );
   });
+
+  test('rolls back optimistic create when the API write fails', () async {
+    final repository = _FailingCreateWishRepository();
+    final container = ProviderContainer(
+      overrides: [
+        wishPoolRepositoryProvider.overrideWith((ref, token) => repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(wishPoolControllerProvider.notifier);
+    await Future<void>.delayed(Duration.zero);
+    expect(container.read(wishPoolControllerProvider).wishes, isEmpty);
+
+    notifier.createWish(title: '会失败的愿望');
+    expect(container.read(wishPoolControllerProvider).wishes, hasLength(1));
+
+    await Future<void>.delayed(Duration.zero);
+    final state = container.read(wishPoolControllerProvider);
+    expect(state.wishes, isEmpty);
+    expect(state.errorMessage, '同步失败，请稍后重试');
+  });
+}
+
+class _FailingCreateWishRepository extends WishPoolRepository {
+  _FailingCreateWishRepository() : super(token: 'test-token');
+
+  @override
+  Future<WishPoolSnapshot> fetchSnapshot({
+    dynamic me,
+    dynamic partner,
+    WishCreatorFilter creatorFilter = WishCreatorFilter.all,
+    WishStatus? statusFilter,
+    String dishQuery = '',
+    DishFilters dishFilters = const DishFilters(),
+  }) async {
+    return const WishPoolSnapshot(
+      users: [],
+      wishes: [],
+      kitchenStatuses: {},
+      fulfillments: [],
+      dishes: [],
+    );
+  }
+
+  @override
+  Future<Wish> createWish({
+    required String title,
+    required String wishType,
+    required List<String> feelingTags,
+    required String desiredTime,
+    required String intensity,
+    required String substituteOption,
+    required List<String> helperTasks,
+  }) async {
+    throw Exception('api failed');
+  }
 }

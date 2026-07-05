@@ -97,42 +97,98 @@ enum UserGender {
   UNSPECIFIED
 }
 
-model User {
-  id                   String          @id @default(uuid())
-  nickname             String
-  email                String?         @unique
-  phone                String?         @unique
-  passwordHash         String?         @map("password_hash")
-  avatarUrl            String?         @map("avatar_url")
-  gender               UserGender      @default(UNSPECIFIED)
-  defaultKitchenStatus KitchenStatusValue? @map("default_kitchen_status")
-  createdAt            DateTime        @default(now()) @map("created_at")
-  updatedAt            DateTime        @updatedAt @map("updated_at")
+enum SpiritStage {
+  BABY
+  GROWING
+  INTIMATE
+}
 
-  coupleAsA            Couple[]        @relation("CoupleUserA")
-  coupleAsB            Couple[]        @relation("CoupleUserB")
-  invites              CoupleInvite[]  @relation("InviteOwner")
-  wishes               Wish[]          @relation("WishCreator")
-  responses            WishResponse[]  @relation("WishResponder")
-  fulfillments         WishFulfillment[] @relation("WishFulfiller")
-  kitchenStatuses      KitchenStatus[]
-  notifications        Notification[]
+enum SpiritMood {
+  NORMAL
+  HAPPY
+  HUNGRY
+  EXCITED
+}
+
+enum SpiritStyle {
+  FLAME
+  SHADOW
+  CELESTIAL
+}
+
+enum FeedType {
+  NORMAL
+  DELICATE
+  FEAST
+}
+
+enum PointTransactionType {
+  EARN
+  SPEND
+}
+
+enum PointReason {
+  CHECKIN
+  CREATE_WISH
+  RESPOND_WISH
+  CONFIRM_RESPONSE
+  FULFILL_WISH
+  ADD_DISH
+  FEED_SPIRIT
+}
+
+enum SpiritLogType {
+  CHECKIN
+  FEED
+  LEVEL_UP
+  STAGE_CHANGED
+  WISH_FULFILLED
+}
+
+model User {
+  id                   String              @id @default(uuid())
+  nickname             String
+  email                String?             @unique
+  phone                String?             @unique
+  passwordHash         String?             @map("password_hash")
+  avatarUrl            String?             @map("avatar_url")
+  gender               UserGender          @default(UNSPECIFIED)
+  defaultKitchenStatus KitchenStatusValue? @map("default_kitchen_status")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+
+  coupleAsA         Couple[]           @relation("CoupleUserA")
+  coupleAsB         Couple[]           @relation("CoupleUserB")
+  invites           CoupleInvite[]     @relation("InviteOwner")
+  wishes            Wish[]             @relation("WishCreator")
+  responses         WishResponse[]     @relation("WishResponder")
+  fulfillments      WishFulfillment[]  @relation("WishFulfiller")
+  kitchenStatuses   KitchenStatus[]
+  notifications     Notification[]
+  pointTransactions PointTransaction[]
+  checkins          Checkin[]
+  spiritLogs        SpiritGrowthLog[]
 
   @@map("users")
 }
 
 model Couple {
-  id          String       @id @default(uuid())
-  userAId     String       @map("user_a_id")
-  userBId     String       @map("user_b_id")
-  status      CoupleStatus @default(ACTIVE)
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  id        String       @id @default(uuid())
+  userAId   String       @map("user_a_id")
+  userBId   String       @map("user_b_id")
+  status    CoupleStatus @default(ACTIVE)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
 
-  userA       User         @relation("CoupleUserA", fields: [userAId], references: [id])
-  userB       User         @relation("CoupleUserB", fields: [userBId], references: [id])
-  wishes      Wish[]
-  dishes      Dish[]
+  userA             User               @relation("CoupleUserA", fields: [userAId], references: [id])
+  userB             User               @relation("CoupleUserB", fields: [userBId], references: [id])
+  wishes            Wish[]
+  dishes            Dish[]
+  spirit            CoupleSpirit?
+  pointAccount      PointAccount?
+  pointTransactions PointTransaction[]
+  checkins          Checkin[]
+  spiritLogs        SpiritGrowthLog[]
 
   @@index([userAId])
   @@index([userBId])
@@ -140,17 +196,17 @@ model Couple {
 }
 
 model CoupleInvite {
-  id         String       @id @default(uuid())
-  inviterId String       @map("inviter_id")
-  inviteeId String?      @map("invitee_id")
-  coupleId  String?      @map("couple_id")
-  code       String       @unique
-  status     InviteStatus @default(PENDING)
-  expiresAt  DateTime     @map("expires_at")
-  createdAt  DateTime     @default(now()) @map("created_at")
-  respondedAt DateTime?   @map("responded_at")
+  id          String       @id @default(uuid())
+  inviterId   String       @map("inviter_id")
+  inviteeId   String?      @map("invitee_id")
+  coupleId    String?      @map("couple_id")
+  code        String       @unique
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime     @map("expires_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  respondedAt DateTime?    @map("responded_at")
 
-  inviter    User         @relation("InviteOwner", fields: [inviterId], references: [id])
+  inviter User @relation("InviteOwner", fields: [inviterId], references: [id])
 
   @@index([inviterId])
   @@index([inviteeId])
@@ -159,27 +215,27 @@ model CoupleInvite {
 }
 
 model Wish {
-  id                String             @id @default(uuid())
-  coupleId          String             @map("couple_id")
-  creatorId         String             @map("creator_id")
+  id                String            @id @default(uuid())
+  coupleId          String            @map("couple_id")
+  creatorId         String            @map("creator_id")
   title             String
-  wishType          WishType           @map("wish_type")
-  feelingTags       String[]           @map("feeling_tags")
-  desiredTime       DesiredTime?       @map("desired_time")
+  wishType          WishType          @map("wish_type")
+  feelingTags       String[]          @map("feeling_tags")
+  desiredTime       DesiredTime?      @map("desired_time")
   intensity         WishIntensity
-  substituteOption  SubstituteOption?  @map("substitute_option")
-  helperTasks       String[]           @map("helper_tasks")
-  status            WishStatus         @default(IN_POOL)
-  currentResponseId String?            @unique @map("current_response_id")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
+  substituteOption  SubstituteOption? @map("substitute_option")
+  helperTasks       String[]          @map("helper_tasks")
+  status            WishStatus        @default(IN_POOL)
+  currentResponseId String?           @unique @map("current_response_id")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
 
-  couple            Couple             @relation(fields: [coupleId], references: [id])
-  creator           User               @relation("WishCreator", fields: [creatorId], references: [id])
-  currentResponse   WishResponse?      @relation("CurrentWishResponse", fields: [currentResponseId], references: [id])
-  responses         WishResponse[]     @relation("WishResponses")
-  fulfillment       WishFulfillment?
-  dishes            Dish[]
+  couple          Couple           @relation(fields: [coupleId], references: [id])
+  creator         User             @relation("WishCreator", fields: [creatorId], references: [id])
+  currentResponse WishResponse?    @relation("CurrentWishResponse", fields: [currentResponseId], references: [id])
+  responses       WishResponse[]   @relation("WishResponses")
+  fulfillment     WishFulfillment?
+  dishes          Dish[]
 
   @@index([coupleId, status])
   @@index([creatorId])
@@ -198,9 +254,9 @@ model WishResponse {
   confirmedAt   DateTime?        @map("confirmed_at")
   createdAt     DateTime         @default(now()) @map("created_at")
 
-  wish          Wish             @relation("WishResponses", fields: [wishId], references: [id])
-  currentFor    Wish?            @relation("CurrentWishResponse")
-  responder     User             @relation("WishResponder", fields: [responderId], references: [id])
+  wish       Wish  @relation("WishResponses", fields: [wishId], references: [id])
+  currentFor Wish? @relation("CurrentWishResponse")
+  responder  User  @relation("WishResponder", fields: [responderId], references: [id])
 
   @@index([wishId])
   @@index([responderId])
@@ -218,8 +274,8 @@ model WishFulfillment {
   addToDishes     Boolean  @default(false) @map("add_to_dishes")
   createdAt       DateTime @default(now()) @map("created_at")
 
-  wish            Wish     @relation(fields: [wishId], references: [id])
-  fulfiller       User     @relation("WishFulfiller", fields: [fulfillerId], references: [id])
+  wish      Wish @relation(fields: [wishId], references: [id])
+  fulfiller User @relation("WishFulfiller", fields: [fulfillerId], references: [id])
 
   @@index([fulfillerId])
   @@map("wish_fulfillments")
@@ -234,28 +290,29 @@ model KitchenStatus {
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
 
-  user      User               @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
   @@map("kitchen_statuses")
 }
 
 model Dish {
-  id               String         @id @default(uuid())
-  coupleId         String         @map("couple_id")
+  id               String          @id @default(uuid())
+  coupleId         String          @map("couple_id")
   name             String
-  cookOwner        String?        @map("cook_owner")
-  suitableTimeTags String[]       @map("suitable_time_tags")
+  cookOwner        String?         @map("cook_owner")
+  suitableTimeTags String[]        @map("suitable_time_tags")
   difficulty       DishDifficulty?
-  tasteTags        String[]       @map("taste_tags")
-  isFavorite       Boolean        @default(false) @map("is_favorite")
-  sourceWishId     String?        @map("source_wish_id")
-  lastFeedback     String?        @map("last_feedback")
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
+  tasteTags        String[]        @map("taste_tags")
+  isFavorite       Boolean         @default(false) @map("is_favorite")
+  sourceWishId     String?         @map("source_wish_id")
+  lastFeedback     String?         @map("last_feedback")
+  imageUrl         String?         @map("image_url")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  couple           Couple         @relation(fields: [coupleId], references: [id])
-  sourceWish       Wish?          @relation(fields: [sourceWishId], references: [id])
+  couple     Couple @relation(fields: [coupleId], references: [id])
+  sourceWish Wish?  @relation(fields: [sourceWishId], references: [id])
 
   @@index([coupleId])
   @@map("dishes")
@@ -271,8 +328,95 @@ model Notification {
   readAt    DateTime?        @map("read_at")
   createdAt DateTime         @default(now()) @map("created_at")
 
-  user      User             @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, readAt])
   @@map("notifications")
+}
+
+model CoupleSpirit {
+  id         String      @id @default(uuid())
+  coupleId   String      @unique @map("couple_id")
+  name       String      @default("饭团精灵")
+  level      Int         @default(1)
+  exp        Int         @default(0)
+  stage      SpiritStage @default(BABY)
+  mood       SpiritMood  @default(NORMAL)
+  style      SpiritStyle @default(FLAME)
+  appearance String      @default("spirit_baby")
+  lastFedAt  DateTime?   @map("last_fed_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  couple Couple @relation(fields: [coupleId], references: [id])
+
+  @@map("couple_spirits")
+}
+
+model PointAccount {
+  id          String   @id @default(uuid())
+  coupleId    String   @unique @map("couple_id")
+  balance     Int      @default(0)
+  totalEarned Int      @default(0) @map("total_earned")
+  totalSpent  Int      @default(0) @map("total_spent")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  couple Couple @relation(fields: [coupleId], references: [id])
+
+  @@map("point_accounts")
+}
+
+model PointTransaction {
+  id           String               @id @default(uuid())
+  coupleId     String               @map("couple_id")
+  userId       String?              @map("user_id")
+  type         PointTransactionType
+  amount       Int
+  balanceAfter Int                  @default(0) @map("balance_after")
+  reason       PointReason
+  relatedType  String?              @map("related_type")
+  relatedId    String?              @map("related_id")
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  couple Couple @relation(fields: [coupleId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@unique([coupleId, userId, reason, relatedId])
+  @@index([coupleId, createdAt])
+  @@index([userId, createdAt])
+  @@map("point_transactions")
+}
+
+model Checkin {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  coupleId     String   @map("couple_id")
+  checkinDate  DateTime @map("checkin_date")
+  pointsEarned Int      @map("points_earned")
+  streakDays   Int      @map("streak_days")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  couple Couple @relation(fields: [coupleId], references: [id])
+
+  @@unique([userId, checkinDate])
+  @@index([coupleId, checkinDate])
+  @@map("checkins")
+}
+
+model SpiritGrowthLog {
+  id        String        @id @default(uuid())
+  coupleId  String        @map("couple_id")
+  userId    String?       @map("user_id")
+  type      SpiritLogType
+  content   String
+  metadata  Json?
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  couple Couple @relation(fields: [coupleId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@index([coupleId, createdAt])
+  @@map("spirit_growth_logs")
 }

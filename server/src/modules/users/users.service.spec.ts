@@ -1,7 +1,7 @@
-import { PrismaService } from '../../prisma/prisma.service';
-import { UsersService } from './users.service';
+import { PrismaService } from "../../prisma/prisma.service";
+import { UsersService } from "./users.service";
 
-describe('UsersService', () => {
+describe("UsersService", () => {
   let prisma: PrismaService;
   let service: UsersService;
 
@@ -16,6 +16,11 @@ describe('UsersService', () => {
   });
 
   beforeEach(async () => {
+    await prisma.spiritGrowthLog.deleteMany({});
+    await prisma.checkin.deleteMany({});
+    await prisma.pointTransaction.deleteMany({});
+    await prisma.pointAccount.deleteMany({});
+    await prisma.coupleSpirit.deleteMany({});
     await prisma.notification.deleteMany({});
     await prisma.wishFulfillment.deleteMany({});
     await prisma.dish.deleteMany({});
@@ -28,21 +33,28 @@ describe('UsersService', () => {
     await prisma.user.deleteMany({});
   });
 
-  it('updates the current user profile only', async () => {
+  it("updates the current user profile only", async () => {
     const user = await prisma.user.create({
-      data: { email: 'profile@example.com', nickname: '旧昵称' },
+      data: { email: "profile@example.com", nickname: "旧昵称" },
     });
 
     const updated = await service.updateMe(user.id, {
-      nickname: '新昵称',
-      avatarUrl: 'https://example.com/avatar.png',
+      nickname: "新昵称",
+      avatarUrl: "https://example.com/avatar.png",
     });
 
     expect(updated).toMatchObject({
       id: user.id,
-      nickname: '新昵称',
-      avatarUrl: 'https://example.com/avatar.png',
+      nickname: "新昵称",
+      avatarUrl: "https://example.com/avatar.png",
     });
-    await expect(service.me(user.id)).resolves.toMatchObject({ nickname: '新昵称' });
+    await expect(service.me(user.id)).resolves.toMatchObject({
+      nickname: "新昵称",
+    });
+
+    const cleared = await service.updateMe(user.id, {
+      avatarUrl: "",
+    });
+    expect(cleared.avatarUrl).toBeNull();
   });
 });

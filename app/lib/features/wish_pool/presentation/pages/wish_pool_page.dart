@@ -6,57 +6,98 @@ import '../../../../shared/ui/design_tokens.dart';
 import '../../../../shared/widgets/soft_components.dart';
 import '../../../auth/domain/auth_models.dart';
 import '../../../auth/presentation/providers/session_controller.dart';
+import '../../../spirit/presentation/widgets/spirit_overlay_scaffold.dart';
 import '../../domain/models/kitchen_models.dart';
 import '../providers/wish_pool_controller.dart';
 
-class WishPoolPage extends ConsumerWidget {
+class WishPoolPage extends ConsumerStatefulWidget {
   const WishPoolPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WishPoolPage> createState() => _WishPoolPageState();
+}
+
+class _WishPoolPageState extends ConsumerState<WishPoolPage> {
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual(wishPoolControllerProvider, (previous, next) {
+      final message = next.errorMessage;
+      if (message != null && message != previous?.errorMessage && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(wishPoolControllerProvider);
     final controller = ref.read(wishPoolControllerProvider.notifier);
     final session = ref.watch(sessionControllerProvider).valueOrNull;
 
-    return Scaffold(
-      bottomNavigationBar: const AppBottomNav(current: 'pool'),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          children: [
-            WarmTopBar(
-              title: '厨房许愿池',
-              subtitle: '想吃什么先许愿，谁有空谁来实现。',
-              leading: const CircleAvatar(
-                radius: 14,
-                backgroundColor: AppColors.surfaceHigh,
-                child:
-                    Icon(Icons.restaurant, size: 15, color: AppColors.primary),
+    return SpiritOverlayScaffold(
+      child: MagazineScaffold(
+        bottomNavigationBar: const AppBottomNav(current: 'pool'),
+        children: [
+          MagazineHeader(
+            title: '厨房许愿池',
+            kicker: 'Today Menu',
+            subtitle: '想吃什么先许愿，谁有空谁来实现。',
+            leadingIcon: Icons.flatware_rounded,
+            actions: const [NotificationBell(color: AppColors.primary)],
+            center: true,
+          ),
+          const SizedBox(height: 8),
+          _TodayFocusCard(
+            partnerName:
+                session?.binding.partner?.nickname ?? state.partner.nickname,
+            state: state,
+            onManage: () => _showUnbindSheet(context, ref),
+          ),
+          const SizedBox(height: 24),
+          const MagazineSectionTitle(
+            title: '两个人的厨房状态',
+            subtitle: '先看今天适不适合开火。',
+          ),
+          _KitchenStatusRow(state: state, controller: controller),
+          const SizedBox(height: 24),
+          const MagazineSectionTitle(
+            title: '愿望流',
+            subtitle: '翻一翻今天池子里的小念头。',
+          ),
+          _StatusFilter(state: state, controller: controller),
+          const SizedBox(height: 24),
+          if (state.isLoading && state.wishes.isEmpty)
+            const _LoadingState()
+          else if (state.errorMessage != null && state.wishes.isEmpty)
+            _ErrorState(
+              message: state.errorMessage!,
+              onRetry: controller.retry,
+            )
+          else if (state.visibleWishes.isEmpty)
+            _EmptyState(
+              hasAnyWish: state.wishes.isNotEmpty,
+              onCreateWish: () => context.push('/wish/new'),
+            )
+          else
+            for (var i = 0; i < state.visibleWishes.length; i++) ...[
+              _StaggeredEntry(
+                index: i,
+                child: _WishCard(
+                  wish: state.visibleWishes[i],
+                  state: state,
+                  controller: controller,
+                ),
               ),
-              actions: const [NotificationBell(color: AppColors.primary)],
-              centerTitle: true,
-            ),
-            const SizedBox(height: 12),
-            _TodayFocusCard(
-              partnerName:
-                  session?.binding.partner?.nickname ?? state.partner.nickname,
-              state: state,
-              onManage: () => _showUnbindSheet(context, ref),
-            ),
-            const SizedBox(height: 14),
-            _KitchenStatusRow(state: state, controller: controller),
-            const SizedBox(height: 18),
-            _StatusFilter(state: state, controller: controller),
-            const SizedBox(height: 14),
-            if (state.visibleWishes.isEmpty)
-              const _EmptyState()
-            else
-              for (final wish in state.visibleWishes) ...[
-                _WishCard(wish: wish, state: state, controller: controller),
-                const SizedBox(height: 14),
-              ],
+              const SizedBox(height: 14),
+            ],
+          if (state.isRefreshing) ...[
+            const SizedBox(height: 8),
+            const Center(child: CircularProgressIndicator()),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -102,121 +143,137 @@ class _TodayFocusCard extends StatelessWidget {
         ? '你和$partnerName还没有新的饭点想法。'
         : '${_wishOwnerText(focusWish, state)}${focusWish.intensity}，希望${focusWish.desiredTime}。';
 
-    return SoftCard(
-      color: AppColors.surface,
-      padding: EdgeInsets.zero,
+    return MagazineCoverCard(
+      label: '今天的饭点',
+      icon: Icons.wb_twilight_rounded,
       onTap: focusWish == null
           ? null
           : () => context.push('/wish/${focusWish.id}'),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -34,
-            top: -36,
-            child: Container(
-              width: 132,
-              height: 132,
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer.withValues(alpha: 0.72),
-                shape: BoxShape.circle,
+          Row(
+            children: [
+              const Spacer(),
+              IconButton.filledTonal(
+                tooltip: '管理绑定',
+                onPressed: onManage,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.72),
+                  foregroundColor: AppColors.primaryDeep,
+                ),
+                icon: const Icon(Icons.manage_accounts_outlined),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            focusTitle,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            focusLine,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _PoolPill(
+                  value: waitingCount,
+                  label: '等你接住',
+                  icon: Icons.favorite_border_rounded,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _PoolPill(
+                  value: confirmCount,
+                  label: '等点头',
+                  icon: Icons.chat_bubble_outline_rounded,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _PoolPill(
+                  value: fulfilledCount,
+                  label: '已吃到',
+                  icon: Icons.local_dining_rounded,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            decoration: BoxDecoration(
+              color: AppColors.mine.withValues(alpha: 0.42),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.66),
               ),
             ),
-          ),
-          Positioned(
-            right: 18,
-            top: 24,
-            child: Icon(
-              Icons.local_fire_department_outlined,
-              color: AppColors.primary.withValues(alpha: 0.28),
-              size: 54,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    const SoftChip(
-                      label: '今天的饭点',
-                      icon: Icons.wb_twilight_outlined,
-                      selected: true,
-                    ),
-                    const Spacer(),
-                    IconButton.filledTonal(
-                      tooltip: '管理绑定',
-                      onPressed: onManage,
-                      icon: const Icon(Icons.manage_accounts_outlined),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  focusTitle,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.text,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  focusLine,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _PoolPill(
-                      value: waitingCount,
-                      label: '等你接住',
-                      icon: Icons.favorite_border,
-                    ),
-                    _PoolPill(
-                      value: confirmCount,
-                      label: '等点头',
-                      icon: Icons.forum_outlined,
-                    ),
-                    _PoolPill(
-                      value: fulfilledCount,
-                      label: '已吃到',
-                      icon: Icons.local_dining_outlined,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLow.withValues(alpha: 0.74),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(
-                        color: AppColors.outline.withValues(alpha: 0.44)),
+                    color: Colors.white.withValues(alpha: 0.72),
+                    shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.soup_kitchen_outlined,
-                          size: 18, color: AppColors.sage),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '$partnerName今天：$partnerStatus',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right,
-                          size: 18, color: AppColors.textMuted),
-                    ],
+                  child: const Icon(
+                    Icons.soup_kitchen_outlined,
+                    size: 16,
+                    color: AppColors.primaryDeep,
                   ),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '$partnerName今天：$partnerStatus',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const Icon(Icons.chevron_right,
+                    size: 18, color: AppColors.textMuted),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StaggeredEntry extends StatelessWidget {
+  const _StaggeredEntry({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 260 + index.clamp(0, 5) * 55),
+      curve: AppAnimation.smoothCurve,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 18 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
@@ -235,27 +292,43 @@ class _PoolPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.48)),
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.64)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: AppColors.primaryDeep),
-          const SizedBox(width: 6),
-          Text(
-            '$value',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.primaryDeep,
-                  fontWeight: FontWeight.w800,
-                ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15, color: AppColors.primaryDeep),
+              const SizedBox(width: 5),
+              Text(
+                '$value',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.text,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
+          const SizedBox(height: 5),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w500,
@@ -322,7 +395,12 @@ class _KitchenStatusRow extends StatelessWidget {
         for (final user in state.users) ...[
           Expanded(
             child: SoftCard(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+              color: user.isMe
+                  ? AppColors.mine.withValues(alpha: 0.56)
+                  : AppColors.partner.withValues(alpha: 0.48),
+              borderColor: Colors.white.withValues(alpha: 0.62),
+              radius: AppRadius.sm,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               onTap: user.isMe
                   ? () => _showKitchenStatusSheet(context, controller, user.id)
                   : null,
@@ -330,14 +408,13 @@ class _KitchenStatusRow extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: user.isMe
-                        ? AppColors.surfaceLow
-                        : AppColors.surfaceContainer,
+                    backgroundColor: Colors.white.withValues(alpha: 0.72),
                     child: Icon(
                       user.isMe
-                          ? Icons.rice_bowl_outlined
-                          : Icons.soup_kitchen_outlined,
-                      color: AppColors.primary,
+                          ? Icons.rice_bowl_rounded
+                          : Icons.soup_kitchen_rounded,
+                      color:
+                          user.isMe ? AppColors.primaryDeep : AppColors.coral,
                       size: 18,
                     ),
                   ),
@@ -348,14 +425,21 @@ class _KitchenStatusRow extends StatelessWidget {
                       children: [
                         Text(
                           user.isMe ? '我的' : '$partnerPronoun的',
-                          style: Theme.of(context).textTheme.labelMedium,
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: AppColors.textMuted,
+                                  ),
                         ),
                         Text(
                           _kitchenStatusText(
                               state.kitchenStatuses[user.id]?.status),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -429,11 +513,6 @@ class _StatusFilter extends StatelessWidget {
     final filters = <WishStatus?, String>{
       null: '全部',
       WishStatus.inPool: '池中',
-      WishStatus.pendingConfirmation: '待确认',
-      WishStatus.claimed: '已认领',
-      WishStatus.deferred: '改天',
-      WishStatus.shelved: '先搁着',
-      WishStatus.fulfilled: '已兑现',
     };
     final partnerPronoun = thirdPersonPronoun(state.partner.gender);
     return SingleChildScrollView(
@@ -621,20 +700,158 @@ class _WishCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({
+    required this.hasAnyWish,
+    required this.onCreateWish,
+  });
+
+  final bool hasAnyWish;
+  final VoidCallback onCreateWish;
 
   @override
   Widget build(BuildContext context) {
     return SoftCard(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: Text(
-          '这个筛选下还没有愿望',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppColors.textMuted),
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      child: Column(
+        children: [
+          Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              gradient: AppColors.accentGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.16),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.flatware_rounded,
+              color: AppColors.primaryDeep,
+              size: 34,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            hasAnyWish ? '当前筛选下没有愿望' : '先许下第一个饭点愿望',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w500,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasAnyWish ? '换个筛选看看，或者新建一个今天想吃的。' : '把想吃的、能接受的替代方案和希望时间写清楚。',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppColors.textMuted),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          _GradientWishButton(onPressed: onCreateWish),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientWishButton extends StatelessWidget {
+  const _GradientWishButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 176),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.28),
+              blurRadius: 18,
+              offset: const Offset(0, 9),
+            ),
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.58),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
+        child: FilledButton.icon(
+          onPressed: onPressed,
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            minimumSize: const Size(176, 52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+            ),
+          ),
+          icon: const Icon(Icons.add_circle_rounded),
+          label: const Text(
+            '许个愿望',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SoftCard(
+      padding: EdgeInsets.symmetric(vertical: 42),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 34),
+      child: Column(
+        children: [
+          const Icon(Icons.wifi_off_outlined, color: AppColors.coral),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重试'),
+          ),
+        ],
       ),
     );
   }

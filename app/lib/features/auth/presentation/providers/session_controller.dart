@@ -158,7 +158,7 @@ class SessionController extends AsyncNotifier<SessionState> {
 
   Future<void> updateProfile({
     required String nickname,
-    String? avatarUrl,
+    Object? avatarUrl = _unchangedAvatarUrl,
     UserGender? gender,
   }) async {
     final current = state.valueOrNull;
@@ -171,11 +171,24 @@ class SessionController extends AsyncNotifier<SessionState> {
       final repository = _userRepository ??= UserRepository(token: token);
       final user = await repository.updateMe(
         nickname: nickname,
-        avatarUrl: avatarUrl,
+        avatarUrl: identical(avatarUrl, _unchangedAvatarUrl)
+            ? null
+            : avatarUrl as String?,
+        clearAvatar:
+            !identical(avatarUrl, _unchangedAvatarUrl) && avatarUrl == null,
         gender: gender,
       );
       return current.copyWith(user: user);
     });
+  }
+
+  Future<String> uploadAvatar({
+    required List<int> bytes,
+    required String filename,
+  }) {
+    final token = _requireToken();
+    final repository = _userRepository ??= UserRepository(token: token);
+    return repository.uploadAvatar(bytes: bytes, filename: filename);
   }
 
   Future<void> logout() async {
@@ -200,3 +213,5 @@ class SessionController extends AsyncNotifier<SessionState> {
     return token;
   }
 }
+
+const _unchangedAvatarUrl = Object();

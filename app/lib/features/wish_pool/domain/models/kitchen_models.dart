@@ -264,6 +264,7 @@ class HomeDish {
     this.difficulty,
     this.sourceWishId,
     this.lastFeedback,
+    this.imageUrl,
   });
 
   final String id;
@@ -275,6 +276,7 @@ class HomeDish {
   final bool isFavorite;
   final String? sourceWishId;
   final String? lastFeedback;
+  final String? imageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -286,6 +288,7 @@ class HomeDish {
     List<String>? tasteTags,
     bool? isFavorite,
     String? lastFeedback,
+    Object? imageUrl = _unchangedDishImageUrl,
   }) {
     return HomeDish(
       id: id,
@@ -297,8 +300,13 @@ class HomeDish {
       isFavorite: isFavorite ?? this.isFavorite,
       sourceWishId: sourceWishId,
       lastFeedback: lastFeedback ?? this.lastFeedback,
+      imageUrl: identical(imageUrl, _unchangedDishImageUrl)
+          ? this.imageUrl
+          : imageUrl as String?,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
   }
 }
+
+const _unchangedDishImageUrl = Object();

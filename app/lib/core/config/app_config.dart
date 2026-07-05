@@ -8,7 +8,7 @@ class AppConfig {
 
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000/api',
+    defaultValue: 'http://110.42.244.187:3338/api',
   );
 
   static bool get isTest => environment == 'test';
