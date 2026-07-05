@@ -16,7 +16,7 @@ services:
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       STORAGE_DRIVER: local
     ports:
-      - "3000:3000"
+      - "3338:3000"
     depends_on:
       postgres:
         condition: service_healthy
