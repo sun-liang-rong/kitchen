@@ -1,0 +1,26 @@
+# Node / NestJS
+node_modules/
+dist/
+coverage/
+*.log
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Prisma
+server/prisma/dev.db
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+app/.metadata
+
+# IDE
+.idea/
+.vscode/
+.DS_Store

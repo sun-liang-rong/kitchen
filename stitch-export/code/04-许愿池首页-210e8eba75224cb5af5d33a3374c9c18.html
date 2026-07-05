@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>厨房许愿池</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#ffb4a4",
+                        "on-tertiary-fixed": "#0b1f18",
+                        "on-error": "#ffffff",
+                        "secondary": "#505f76",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container-highest": "#f5ddd9",
+                        "surface-tint": "#a9371f",
+                        "inverse-primary": "#ffb4a4",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#b5ccc1",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#fbe3de",
+                        "background": "#fff8f6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#3d0500",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#f5ddd9",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#a9371f",
+                        "inverse-on-surface": "#ffede9",
+                        "outline": "#8c716b",
+                        "secondary-container": "#d0e1fb",
+                        "primary-container": "#f06a4d",
+                        "surface-dim": "#ecd5d0",
+                        "surface-bright": "#fff8f6",
+                        "surface-container-low": "#fff0ed",
+                        "primary-fixed": "#ffdad3",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "outline-variant": "#dfbfb9",
+                        "on-primary-container": "#5c0c00",
+                        "on-surface": "#251916",
+                        "tertiary-container": "#82988e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#881f08",
+                        "surface-container": "#ffe9e5",
+                        "on-tertiary-container": "#1c3029",
+                        "tertiary": "#4e635a",
+                        "on-surface-variant": "#58413c",
+                        "surface": "#fff8f6",
+                        "inverse-surface": "#3b2d2a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "tertiary-fixed": "#d1e8dd",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-background": "#251916",
+                        "on-tertiary-fixed-variant": "#374b43"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "md": "16px",
+                        "base": "8px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["\"Inter\", sans-serif"],
+                        "body-sm": ["\"Inter\", sans-serif"],
+                        "headline-lg": ["\"Inter\", sans-serif"],
+                        "headline-md": ["\"Inter\", sans-serif"],
+                        "label-md": ["\"Inter\", sans-serif"],
+                        "display-lg": ["\"Inter\", sans-serif"],
+                        "body-lg": ["\"Inter\", sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .soft-shadow { box-shadow: 0 8px 30px rgba(169,55,31,0.04); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md antialiased pb-28 md:hidden">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-mobile h-16 bg-background dark:bg-background docked full-width top-0 z-40 sticky">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-variant flex items-center justify-center flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A soft, warm-toned profile picture of a loving couple, minimal illustration style, soft lighting, light mode UI aesthetic, subtle coral and beige tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChnpFDZoVx2VhLdDAzi2N8bRDaw_zM18GirzmZBOjW9POiiRDWU4CuG3ACDubeXUbkuW5PbYYozmMeU352gUDDIoGY1vUt-vpPmgdHVDQDjiK1K7D-jVgx0jvSIXyq1GUiHF_lq5rLVci3RjkqZMSu5NXM3-WHZjEiR6u0YFL4oDbq3cQ5oW8on5dtvbLSUY32K4gxWODqgG20VkWT5_0C44adQ1q_eZMQFevltiZaFhXxA_MjNYgbkg"/>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim">厨房许愿池</h1>
+<button class="w-8 h-8 flex items-center justify-center text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="px-margin-mobile flex flex-col gap-lg mt-sm">
+<!-- Header Subtitle -->
+<section>
+<p class="font-body-sm text-on-surface-variant opacity-80">想吃什么先许愿，谁有空谁来实现。</p>
+</section>
+<!-- Binding Card (Bento) -->
+<section class="bg-surface-container-lowest rounded-lg p-md soft-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-container opacity-[0.03] rounded-bl-full pointer-events-none"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-container font-label-md text-label-md gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                    已绑定
+                </span>
+<button class="font-label-md text-label-md text-secondary hover:text-primary transition-colors">管理</button>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">你和她的许愿池</h2>
+<div class="flex items-center gap-2 mb-md">
+<span class="font-body-sm text-on-surface-variant">邀请码:</span>
+<span class="font-headline-md text-headline-md tracking-widest text-primary">2846</span>
+<button class="text-on-surface-variant hover:text-primary ml-1"><span class="material-symbols-outlined text-[16px]">content_copy</span></button>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">只有你们两个人能看到这些愿望</p>
+</section>
+<!-- Status Card -->
+<section class="grid grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest rounded-lg p-md soft-shadow flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A minimal, soft illustration of a young man, warm beige background, clean vector style, light mode design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB2a37uFftb33Y7YtTaSVgM6UHxQ_1Bls6_u_ZOJB2aDduLwJYBbCusgBmSm9mEFfuQbUlCMgJQR79DX6CQYYpNPV_QAkXZageDLQW46ZHfPduyDvHx7uLU8Y-8RraE4kFGLOdrBr-_2XoMpnKpFAwqSHr1oX7-OTabj7ivL6a-lCpI8mLEEjjDqeFjqOMfa_B6I953WUD0QD_3K_N8PnnD3-cTNS82ke9IXEAWzy2-ywVSAWX8p7nCw"/>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">我的</span>
+<span class="font-body-sm text-on-surface font-medium">今天正常</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-md soft-shadow flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A minimal, soft illustration of a young woman, warm coral background, clean vector style, light mode design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEqGF6CsnEv5xXRnI_0Avw-vyzlAIuag8gEXO4fyRnz9hiUTOV06CakZwb491KS61G09WaFQ1PlY0eDp2i9Wg1BfWlMmiLssWRj8qYVKqbaiz_H5hPMDJCH3Yz8SS1SS9ltYDXC2TcVcZ4G0vZRE5VygL4vt9z8xBIXUVpFrsfV6bd_Qj4u-0uMampfXEKUV1iFeTUFJm3PpxYbqTApbhOW16-mlzgkzyEYu66hUPs6XoUIvsAmwTpuQ"/>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">她的</span>
+<span class="font-body-sm text-on-surface font-medium">有点累</span>
+</div>
+</div>
+</section>
+<!-- Tabs -->
+<section class="-mx-margin-mobile px-margin-mobile">
+<div class="flex gap-4 overflow-x-auto no-scrollbar py-2">
+<button class="flex flex-col items-center gap-1 flex-shrink-0">
+<span class="font-body-sm font-medium text-primary">全部</span>
+<div class="w-4 h-[2px] bg-primary rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<span class="font-body-sm text-on-surface-variant">她许的</span>
+<div class="w-4 h-[2px] bg-transparent rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<span class="font-body-sm text-on-surface-variant">我许的</span>
+<div class="w-4 h-[2px] bg-transparent rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<span class="font-body-sm text-on-surface-variant">池中</span>
+<div class="w-4 h-[2px] bg-transparent rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<span class="font-body-sm text-on-surface-variant">待确认</span>
+<div class="w-4 h-[2px] bg-transparent rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
+<span class="font-body-sm text-on-surface-variant">已认领</span>
+<div class="w-4 h-[2px] bg-transparent rounded-full"></div>
+</button>
+</div>
+</section>
+<!-- Wish List -->
+<section class="flex flex-col gap-md">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg p-3 soft-shadow flex gap-3 active:scale-[0.98] transition-transform duration-200 ease-out">
+<div class="w-[100px] h-[100px] rounded-lg bg-surface-variant flex-shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A beautifully plated dish of Cola Chicken Wings, glowing amber glaze, soft natural morning light filtering from a window, placed on a clean white ceramic plate over a light wooden table, modern minimal food photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCssSuZgVbWpnBWocdzAy8x6lqMzfJ8OX3mMLBhGf6BLUgKE4je6JGRff2NUutmi5Xm4BeFc5mQs8KPPEArJaINCGxWNrssZ4qSIbs5rsfIC3H78kZqmqNFyww8wB2GsMjS7NEjnT_H7Cb627lZ9i74z65bKANGfsLO2uU7Cx8aMiZz2rabbY2irEjrWazTw0IqBH2xxdvK71h4NOFJuU-VF4gaHMHazqJSIYpRolx_kyu7qFvelVH2iQ"/>
+<div class="absolute top-1 left-1 bg-surface-container/80 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] text-on-surface font-medium border border-outline/10">池中</div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface leading-tight mb-1.5">可乐鸡翅</h3>
+<div class="flex flex-wrap gap-1 mb-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px] font-medium opacity-80">她许的</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-container/30 text-on-primary-container text-[10px] font-medium">今天特别想吃</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-tertiary-container/20 text-on-tertiary-container text-[10px] font-medium">愿意洗碗</span>
+</div>
+</div>
+<div class="flex justify-end">
+<button class="bg-primary text-on-primary font-label-md text-label-md px-3 py-1.5 rounded-full hover:bg-surface-tint transition-colors shadow-sm">
+                            我来回应
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-lg p-3 soft-shadow flex gap-3 active:scale-[0.98] transition-transform duration-200 ease-out">
+<div class="w-[100px] h-[100px] rounded-lg bg-surface-variant flex-shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A comforting bowl of steaming hot stew with root vegetables, soft focus, warm inviting lighting, minimal beige ceramic bowl, placed on a light oak table, evocative of home cooking and care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMcvoZ2DcmPkh7_VCb-tL1G7-s92-uWnC_BzE2Rq0278KncZQQQurxwd1onOaAnpzntwN_R58K14CrcgZAvCdstwvRmZ-zLEeOna5VfEcrKPoiawL7pGRxTqj4_CtArUnxJV6eP_hzcZPqU5eZL7oGtLsFKj83C8j0qY5SE1hs-0Jf9tiLhf4e8joqSo7N-yskjTSAzDkqq0FZt6jigpjmgY0C2jrMadSAQ-WWsn-G3eSiuj9f-mHKgA"/>
+<div class="absolute top-1 left-1 bg-tertiary-fixed/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] text-on-tertiary-container font-medium border border-outline/10">已认领</div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface leading-tight mb-1.5">想吃点热乎的</h3>
+<div class="flex flex-wrap gap-1 mb-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px] font-medium opacity-80">我许的</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-secondary-container/30 text-on-secondary-container text-[10px] font-medium">随口一想</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px] font-medium">有空再说</span>
+</div>
+</div>
+<div class="flex items-center gap-1 justify-end">
+<div class="w-4 h-4 rounded-full bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimal, soft illustration of a young woman, warm coral background, clean vector style, light mode design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBthzvZq1HXWQnNd5x-UvTC41NdPpCm_y-bTjzEaWxyUsJdwSCGqw2Ob4MLFcUroDbNfXYA9jA6mjmt9DAcBYPfNcspme00__3qMQm7zcvJ-lenHLsrW8xlFzfFFBQc7ffs2eMOC50M5xL6ZrnIfQ0rBEeiQKOhAdtlJRHdmUrzjw9kx1JiBcTi2FSCuYxAZc3RvJENDrZHgTPdomk1NwIJ39tNrZQJHAnoBrIW5rkQmy7iVg-Qb6sP8g"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant opacity-80">她 18:42 回应</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-[100px] right-margin-mobile w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(169,55,31,0.3)] z-40 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'wght' 300;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest dark:bg-surface-dim fixed bottom-0 w-full rounded-t-xl shadow-[0_-4px_20px_0_rgba(169,55,31,0.05)] shadow-lg">
+<button class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-full px-4 py-1 hover:opacity-80 scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">home_health</span>
+<span class="font-label-md-mobile text-label-md-mobile text-[10px]">许愿池</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80">
+<span class="material-symbols-outlined mb-1">add_circle</span>
+<span class="font-label-md-mobile text-label-md-mobile text-[10px]">许愿</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80">
+<span class="material-symbols-outlined mb-1">menu_book</span>
+<span class="font-label-md-mobile text-label-md-mobile text-[10px]">菜库</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80">
+<span class="material-symbols-outlined mb-1">history_edu</span>
+<span class="font-label-md-mobile text-label-md-mobile text-[10px]">记录</span>
+</button>
+</nav>
+</body></html>

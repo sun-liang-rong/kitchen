@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>我们家的菜</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#ffb4a4",
+                      "on-tertiary-fixed": "#0b1f18",
+                      "on-error": "#ffffff",
+                      "secondary": "#505f76",
+                      "secondary-fixed": "#d3e4fe",
+                      "surface-container-highest": "#f5ddd9",
+                      "surface-tint": "#a9371f",
+                      "inverse-primary": "#ffb4a4",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed-dim": "#b5ccc1",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#fbe3de",
+                      "background": "#fff8f6",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#3d0500",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#f5ddd9",
+                      "on-secondary-container": "#54647a",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "primary": "#a9371f",
+                      "inverse-on-surface": "#ffede9",
+                      "outline": "#8c716b",
+                      "secondary-container": "#d0e1fb",
+                      "primary-container": "#f06a4d",
+                      "surface-dim": "#ecd5d0",
+                      "surface-bright": "#fff8f6",
+                      "surface-container-low": "#fff0ed",
+                      "primary-fixed": "#ffdad3",
+                      "secondary-fixed-dim": "#b7c8e1",
+                      "outline-variant": "#dfbfb9",
+                      "on-primary-container": "#5c0c00",
+                      "on-surface": "#251916",
+                      "tertiary-container": "#82988e",
+                      "error-container": "#ffdad6",
+                      "on-primary-fixed-variant": "#881f08",
+                      "surface-container": "#ffe9e5",
+                      "on-tertiary-container": "#1c3029",
+                      "tertiary": "#4e635a",
+                      "on-surface-variant": "#58413c",
+                      "surface": "#fff8f6",
+                      "inverse-surface": "#3b2d2a",
+                      "on-secondary-fixed-variant": "#38485d",
+                      "tertiary-fixed": "#d1e8dd",
+                      "on-secondary-fixed": "#0b1c30",
+                      "on-background": "#251916",
+                      "on-tertiary-fixed-variant": "#374b43"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "24px",
+                      "margin-desktop": "40px",
+                      "md": "16px",
+                      "base": "8px",
+                      "xl": "32px",
+                      "sm": "8px",
+                      "gutter": "12px",
+                      "margin-mobile": "16px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "body-sm": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "headline-lg": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "headline-md": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "label-md": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "display-lg": [
+                              "\"Inter, PingFang SC\""
+                      ],
+                      "body-lg": [
+                              "\"Inter, PingFang SC\""
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .chip {
+            background-color: rgba(169, 55, 31, 0.1);
+            color: #a9371f;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 font-body-md">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-mobile h-16 bg-background dark:bg-background docked full-width top-0 sticky z-40">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small, stylized profile picture of a young couple, illustrated in a modern minimalist flat design style with warm, soft beige and coral tones. The mood is intimate and cheerful." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcUQcTYoBMrDKwQQGAh9ftbam6n1lD9N6mSdJ6KC7crxT63eRwV7HE8aAt7moKXsZcjlz02hgnhlwlEV1h0UI0bypCrQ_lOvCiXrCKia0_7dxrbVEmhX9mRt9JY2ijTHyaDbAP7r-vkBebq9s_r22CAS14azynze7TLt9Z-Pyd8Ya3Ku-fLnqWg1UhE1uRQs5eT1pdEB8UgrWsnWy0H3ropWdkRdf_aC-Dfjg2l_M7BsHy3qIzmgZ9vQ"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim">厨房许愿池</h1>
+<div class="flex items-center">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-lg">
+<!-- Page Title -->
+<div class="mb-lg flex items-center justify-between">
+<h2 class="font-display-lg text-display-lg">我们家的菜</h2>
+<button class="bg-primary text-on-primary rounded-full px-4 py-2 font-label-md text-label-md flex items-center gap-1 hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span> 添加新菜
+            </button>
+</div>
+<!-- Recommended Card -->
+<section class="mb-xl">
+<h3 class="font-headline-md text-headline-md mb-md text-on-surface-variant">适合今天</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_8px_30px_rgb(169,55,31,0.04)] overflow-hidden flex flex-col md:flex-row cursor-pointer transition-transform hover:scale-[1.01] duration-300">
+<div class="md:w-2/5 h-48 md:h-auto relative">
+<img class="w-full h-full object-cover absolute inset-0" data-alt="A beautiful top-down food photography shot of a steaming bowl of tomato and egg noodle soup, paired with a small side dish of crisp smashed cucumber salad. The scene is brightly lit with natural morning light casting soft shadows on a minimalist light wood dining table. Warm, appetizing colors with rich red tomatoes and vibrant green cucumbers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6RfxNl0A8Jc4vXnN0YJEIf4pwBjQZXY2n67SYUb6gLo2ZMW_NhGoA7hnp8KcRXUwE4drPme8mDpc33UAUTD43k87pEyGRNxFF2Sgw3pKp9WfQFKSQWIKIFLTjPeSsEC7oUjwxwYfzxAWT2YiMTa2e4V1ATveS8rNFKKLXsrWnMZd_6jsI0Y6WNdOR1PQ-3UQa4Sy5f2aAs7-2JuHt2tRTc-Bv3AJkEJnJMorDPcgSqo14XeFCyKw23A"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-white/90 backdrop-blur-sm text-primary font-label-md text-label-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">bolt</span> 快手
+                        </span>
+<span class="bg-white/90 backdrop-blur-sm text-primary font-label-md text-label-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">local_fire_department</span> 热乎
+                        </span>
+</div>
+</div>
+<div class="p-lg md:w-3/5 flex flex-col justify-center">
+<div class="text-sm text-secondary mb-2">系统推荐的完美搭配</div>
+<h4 class="font-headline-lg text-headline-lg mb-2">番茄鸡蛋面 + 凉拌黄瓜</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">下班回家的首选，酸甜开胃的番茄汤底配上清爽的凉拌黄瓜，15分钟就能搞定的温暖晚餐。</p>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-2.5 rounded-full hover:bg-primary-container transition-colors w-full sm:w-auto">
+                            就吃这个
+                        </button>
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md px-6 py-2.5 rounded-full hover:bg-surface-container-low transition-colors w-full sm:w-auto flex items-center justify-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 16px;">autorenew</span> 换一换
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Menu Grid -->
+<section>
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-md text-headline-md text-on-surface-variant">全部菜品</h3>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-low text-primary">
+<span class="material-symbols-outlined" style="font-size: 20px;">filter_list</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-low text-primary">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_20px_rgb(169,55,31,0.03)] cursor-pointer hover:-translate-y-1 transition-transform duration-300 flex flex-col h-full">
+<div class="h-40 rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover" data-alt="A comforting bowl of tomato and egg noodle soup, viewed from a slight angle. The rich red broth is speckled with golden scrambled eggs and chopped green scallions. Soft, natural window light highlights the steam rising gently from the bowl, set on a simple cream-colored placemat." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDjbKBmjcbo9fBggyiCuEiysIhbhiHb2mQqUkIk4cUPR3B8p0xwsw4Nqnl92sHPC1j4ZBy5lSnUfo3O2Ca4EOniAbVrMFCmli26sMZ2-KQc419mck966Hw72I5mYsXgN92J0oTirC5RDjuv0iGqUKU0SQeiPQlwW4BZEwm1CpfmAg3ElamxafTgBYgZvQ6XdpXAN3xODFTrkmvw-U0rewBsvvURH6Vs1cKZDhGWQAmCscWZE2saMol0Q"/>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">番茄鸡蛋面</h4>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="chip font-label-md text-label-md px-3 py-1 rounded-full">工作日</span>
+<span class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full">她会做</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_20px_rgb(169,55,31,0.03)] cursor-pointer hover:-translate-y-1 transition-transform duration-300 flex flex-col h-full">
+<div class="h-40 rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover" data-alt="A mouth-watering close-up of braised chicken thighs (Hongshao style) with a glossy, rich caramelized soy sauce glaze. The chicken pieces are arranged neatly on a pristine white ceramic plate, garnished with a sprinkle of white sesame seeds and a sprig of fresh cilantro. Warm, inviting lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuANfXzo03km5dqF1UIrRxraHsxY-x5Zmscy78Qp2WrbYm-4WKA2NkqgF2WqhlFzuxwxo_F-ecE5CJVyBtikjuuioUNoYTvBzAbXJjuXGmBQT4mLTMPrv93z6xq9Q51fKKywX785IP6aBKXa9VrhpM5px7TdbX5jPW2EoKz8xEMbBbVB0O91ivQ0HYGb2EP8ilpCTy8rR4-ZH8zP60VqUaGaVxJsMnE8ajKSdCIGY-mBg3ghsgBApMLD4A"/>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">红烧鸡腿</h4>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="chip font-label-md text-label-md px-3 py-1 rounded-full">下饭</span>
+<span class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full">我会做</span>
+<span class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">verified</span>兑现过
+                        </span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_20px_rgb(169,55,31,0.03)] cursor-pointer hover:-translate-y-1 transition-transform duration-300 flex flex-col h-full">
+<div class="h-40 rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover" data-alt="A rustic cast iron pot filled with a hearty tomato and beef brisket stew. The chunky pieces of tender beef and soft tomatoes are simmering in a thick, vibrant red sauce. The setting suggests a relaxed weekend afternoon cooking session, with soft, diffused sunlight illuminating the rich textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwlpGbQyRzlNX5CvXiQ3tVRoyX4R7u7X6AxXlo8aKtUOuo4h5IBP2lAtneLQ3hDI7_2EZXUJGS6yA3gBultSCBxmAzDHmwo9cvXseAosDuiW3roDWBBdtIyDAkbyJIbmtDOrTJXo9lSYzwMsnLFFmLia3jb8zVnkEtxnwPHQu_CCbsHKL23A1f72hklEpPUHx6DATEvE4wFxXhJysy8D4b7cRHi4kaI9jKxWHig358grPXOjHKm3NusA"/>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">番茄牛腩</h4>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="chip font-label-md text-label-md px-3 py-1 rounded-full">周末</span>
+<span class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">group</span>一起做
+                        </span>
+</div>
+</div>
+<!-- Add new placeholder -->
+<div class="bg-surface-container-lowest/50 border-2 border-dashed border-outline-variant rounded-xl p-md flex flex-col items-center justify-center h-full min-h-[240px] cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
+<span class="material-symbols-outlined">add</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">录入拿手好菜</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest dark:bg-surface-dim shadow-[0_-4px_20px_0_rgba(169,55,31,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">home_health</span>
+<span class="font-label-md-mobile text-label-md-mobile">许愿池</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">add_circle</span>
+<span class="font-label-md-mobile text-label-md-mobile">许愿</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-full px-4 py-1 hover:opacity-80 transition-opacity scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1 fill">menu_book</span>
+<span class="font-label-md-mobile text-label-md-mobile">菜库</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container dark:text-on-secondary-fixed-variant hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">history_edu</span>
+<span class="font-label-md-mobile text-label-md-mobile">记录</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>厨房许愿池 - 记录兑现</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#ffb4a4",
+                        "on-tertiary-fixed": "#0b1f18",
+                        "on-error": "#ffffff",
+                        "secondary": "#505f76",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container-highest": "#f5ddd9",
+                        "surface-tint": "#a9371f",
+                        "inverse-primary": "#ffb4a4",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#b5ccc1",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#fbe3de",
+                        "background": "#fff8f6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#3d0500",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#f5ddd9",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#a9371f",
+                        "inverse-on-surface": "#ffede9",
+                        "outline": "#8c716b",
+                        "secondary-container": "#d0e1fb",
+                        "primary-container": "#f06a4d",
+                        "surface-dim": "#ecd5d0",
+                        "surface-bright": "#fff8f6",
+                        "surface-container-low": "#fff0ed",
+                        "primary-fixed": "#ffdad3",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "outline-variant": "#dfbfb9",
+                        "on-primary-container": "#5c0c00",
+                        "on-surface": "#251916",
+                        "tertiary-container": "#82988e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#881f08",
+                        "surface-container": "#ffe9e5",
+                        "on-tertiary-container": "#1c3029",
+                        "tertiary": "#4e635a",
+                        "on-surface-variant": "#58413c",
+                        "surface": "#fff8f6",
+                        "inverse-surface": "#3b2d2a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "tertiary-fixed": "#d1e8dd",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-background": "#251916",
+                        "on-tertiary-fixed-variant": "#374b43"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "md": "16px",
+                        "base": "8px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px",
+                        "xs": "4px"
+                    },
+                    fontFamily: {
+                        "body-md": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "body-sm": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "headline-lg": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "headline-md": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "label-md": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "display-lg": ["\"Inter\", \"PingFang SC\"", "sans-serif"],
+                        "body-lg": ["\"Inter\", \"PingFang SC\"", "sans-serif"]
+                    },
+                    fontSize: {
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "500" }],
+                        "display-lg": ["32px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dfbfb9;
+            border-radius: 4px;
+        }
+        
+        /* Chip interactive styles */
+        .chip-radio:checked + label {
+            background-color: #f06a4d; /* primary-container */
+            color: #ffffff; /* on-primary */
+            border-color: #f06a4d;
+        }
+        .chip-checkbox:checked + label {
+            background-color: #f5ddd9; /* surface-variant */
+            color: #251916; /* on-surface */
+            border-color: #8c716b; /* outline */
+        }
+        
+        /* Slide up animation for drawer */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Mock Background App Content (Blurred) -->
+<div class="fixed inset-0 z-0">
+<div class="absolute inset-0 bg-cover bg-center opacity-40" data-alt="A warm, inviting kitchen scene bathed in soft morning sunlight. Minimalist modern design with cream and light wood tones. A steaming cup of coffee and a beautifully plated breakfast sit on a clean countertop. The mood is peaceful, intimate, and high-quality, fitting a premium lifestyle app aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBGuuJnyHfa2wrpV2QxUHNqVHfhbfSUn4ETms7KqjGQ5V95a_N-us4NF0JgzJgCFCO_G2f2oJhkIIbiL3tDMyJGKRfOnevQUZWtgxN0KU8sn9eU_p7kQzTICc68i5-oXXgr6iwt8VyEUy5yMCodeeUklY39kYa2bOiM6LXHCcFXXESmiLH0oTQ56Uo6SacE20DVI45rhp8sFd7CKfaHE7owrHpctLnbjzBXBpDaJIKo43TG4ysokdptpg')">
+</div>
+<!-- Overlay to darken background and focus on drawer -->
+<div class="absolute inset-0 bg-on-background/20 backdrop-blur-md"></div>
+</div>
+<!-- Bottom Drawer Sub-App -->
+<div class="fixed inset-x-0 bottom-0 z-50 flex flex-col justify-end pointer-events-none">
+<!-- Drawer Container -->
+<div class="bg-surface w-full rounded-t-[24px] md:rounded-t-[32px] shadow-[0_-8px_30px_0_rgba(169,55,31,0.08)] pointer-events-auto flex flex-col max-h-[795px] animate-slide-up mx-auto max-w-2xl">
+<!-- Drag Handle Area -->
+<div class="w-full flex justify-center pt-4 pb-2 shrink-0 cursor-grab active:cursor-grabbing">
+<div class="w-12 h-1.5 bg-outline-variant/50 rounded-full"></div>
+</div>
+<!-- Header -->
+<div class="px-margin-mobile md:px-margin-desktop text-center pb-6 shrink-0 border-b border-surface-variant/50">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">记录这次兑现</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">不用打分，只留下对下次有用的记忆。</p>
+</div>
+<!-- Scrollable Content -->
+<div class="px-margin-mobile md:px-margin-desktop py-6 overflow-y-auto space-y-8">
+<!-- 1. Actual Meal Input -->
+<div class="space-y-3">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">restaurant</span>
+                        实际吃了什么
+                    </label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-transparent focus:border-primary focus:bg-surface focus:ring-1 focus:ring-primary rounded-xl px-4 py-3.5 font-body-md text-on-surface placeholder:text-outline transition-all duration-200 outline-none" placeholder="例如：番茄炒蛋配米饭" type="text"/>
+</div>
+</div>
+<!-- 2. Who Made It (Single Select) -->
+<div class="space-y-3">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                        谁实现了
+                    </label>
+<div class="flex flex-wrap gap-3">
+<div class="relative">
+<input checked="" class="chip-radio sr-only" id="made_me" name="who_made" type="radio"/>
+<label class="inline-flex items-center justify-center px-5 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface border border-transparent cursor-pointer transition-colors hover:bg-surface-container-high" for="made_me">
+                                我
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-radio sr-only" id="made_her" name="who_made" type="radio"/>
+<label class="inline-flex items-center justify-center px-5 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface border border-transparent cursor-pointer transition-colors hover:bg-surface-container-high" for="made_her">
+                                她
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-radio sr-only" id="made_together" name="who_made" type="radio"/>
+<label class="inline-flex items-center justify-center px-5 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface border border-transparent cursor-pointer transition-colors hover:bg-surface-container-high" for="made_together">
+                                一起完成
+                            </label>
+</div>
+</div>
+</div>
+<!-- 3. Who Helped (Multi Select) -->
+<div class="space-y-3">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">volunteer_activism</span>
+                        谁搭了手
+                    </label>
+<div class="flex flex-wrap gap-2.5">
+<!-- Chip 1 -->
+<div class="relative">
+<input class="chip-checkbox sr-only" id="help_dishes" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg font-body-sm text-body-sm bg-surface border border-outline-variant text-on-surface-variant cursor-pointer transition-all hover:bg-surface-container-low" for="help_dishes">
+                                她洗碗
+                            </label>
+</div>
+<!-- Chip 2 -->
+<div class="relative">
+<input class="chip-checkbox sr-only" id="help_mop" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg font-body-sm text-body-sm bg-surface border border-outline-variant text-on-surface-variant cursor-pointer transition-all hover:bg-surface-container-low" for="help_mop">
+                                她拖地
+                            </label>
+</div>
+<!-- Chip 3 -->
+<div class="relative">
+<input class="chip-checkbox sr-only" id="help_groceries" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg font-body-sm text-body-sm bg-surface border border-outline-variant text-on-surface-variant cursor-pointer transition-all hover:bg-surface-container-low" for="help_groceries">
+                                我买菜
+                            </label>
+</div>
+<!-- Chip 4 -->
+<div class="relative">
+<input class="chip-checkbox sr-only" id="help_clean" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg font-body-sm text-body-sm bg-surface border border-outline-variant text-on-surface-variant cursor-pointer transition-all hover:bg-surface-container-low" for="help_clean">
+                                一起收拾
+                            </label>
+</div>
+</div>
+</div>
+<!-- 4. Feedback Chips (Multi Select) -->
+<div class="space-y-3">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">bookmark_heart</span>
+                        反馈
+                    </label>
+<div class="flex flex-wrap gap-2.5">
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_next_time" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_next_time">
+                                下次还想吃
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_delicious" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_delicious">
+                                很好吃
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_weekday" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_weekday">
+                                适合工作日
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_salty" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_salty">
+                                有点咸
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_weekend" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_weekend">
+                                太麻烦下次周末做
+                            </label>
+</div>
+<div class="relative">
+<input class="chip-checkbox sr-only" id="fb_regular" type="checkbox"/>
+<label class="inline-flex items-center justify-center px-4 py-1.5 rounded-full font-body-sm text-body-sm bg-surface-container-lowest border border-outline-variant text-secondary cursor-pointer transition-all hover:bg-surface-container-low shadow-sm" for="fb_regular">
+                                可以进常吃
+                            </label>
+</div>
+</div>
+</div>
+<!-- 5. Toggle Switch -->
+<div class="flex items-center justify-between py-2 border-t border-surface-variant/40 mt-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">auto_awesome</span>
+<span class="font-body-md text-body-md text-on-surface">加入我们家的常吃菜</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="px-margin-mobile md:px-margin-desktop pb-8 pt-4 shrink-0 bg-surface">
+<button class="w-full flex items-center justify-center gap-2 py-4 bg-primary text-on-primary rounded-full font-headline-md text-headline-md shadow-lg shadow-primary/20 hover:bg-surface-tint active:scale-[0.98] transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    愿望已兑现
+                </button>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>厨房许愿池 - 兑现记录</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter,+PingFang+SC:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#ffb4a4",
+                        "on-tertiary-fixed": "#0b1f18",
+                        "on-error": "#ffffff",
+                        "secondary": "#505f76",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container-highest": "#f5ddd9",
+                        "surface-tint": "#a9371f",
+                        "inverse-primary": "#ffb4a4",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#b5ccc1",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#fbe3de",
+                        "background": "#fff8f6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#3d0500",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#f5ddd9",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#a9371f",
+                        "inverse-on-surface": "#ffede9",
+                        "outline": "#8c716b",
+                        "secondary-container": "#d0e1fb",
+                        "primary-container": "#f06a4d",
+                        "surface-dim": "#ecd5d0",
+                        "surface-bright": "#fff8f6",
+                        "surface-container-low": "#fff0ed",
+                        "primary-fixed": "#ffdad3",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "outline-variant": "#dfbfb9",
+                        "on-primary-container": "#5c0c00",
+                        "on-surface": "#251916",
+                        "tertiary-container": "#82988e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#881f08",
+                        "surface-container": "#ffe9e5",
+                        "on-tertiary-container": "#1c3029",
+                        "tertiary": "#4e635a",
+                        "on-surface-variant": "#58413c",
+                        "surface": "#fff8f6",
+                        "inverse-surface": "#3b2d2a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "tertiary-fixed": "#d1e8dd",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-background": "#251916",
+                        "on-tertiary-fixed-variant": "#374b43"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "md": "16px",
+                        "base": "8px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["\"Inter, PingFang SC\""],
+                        "body-sm": ["\"Inter, PingFang SC\""],
+                        "headline-lg": ["\"Inter, PingFang SC\""],
+                        "headline-md": ["\"Inter, PingFang SC\""],
+                        "label-md": ["\"Inter, PingFang SC\""],
+                        "display-lg": ["\"Inter, PingFang SC\""],
+                        "body-lg": ["\"Inter, PingFang SC\""]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-background flex justify-between items-center w-full px-margin-mobile h-16 fixed z-50 transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-highest shrink-0" data-alt="A minimalist, warm illustration of a couple cooking together in a sunlit modern kitchen. The color palette features soft beige, warm coral, and gentle earthy tones. High aesthetic quality, suitable for a refined app avatar." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAmsenNaE6VLb5IV5e9VegHk0AENWHpKHfH2ts9Qw5BuUlDlOH7i5lBnWKoOd6YkQsgZ8zPAxPREhK6ycd6n6sw3wIKjHJ9ksf51FIfBe5Ro34ADdbrjQ3w93zMxk6mUjiNn7MZRdomSCuSNNIOpYvka5jRFaHXXtr91D8iWmW6NniRuwjN68F_K2F6wFh_lCEKJBYNsnO7Ds-B5mfiXXLamfpcSnsIBrkMp3pbAt1IPWcknudiHYNlCA'); background-size: cover; background-position: center;"></div>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">厨房许愿池</div>
+<div class="flex items-center">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-[1200px] mx-auto px-margin-mobile pt-24 pb-32 md:pb-lg flex flex-col md:flex-row gap-lg">
+<!-- Sidebar Navigation (Desktop only) -->
+<aside class="hidden md:flex flex-col w-64 shrink-0 space-y-sm sticky top-24 h-[calc(100vh-8rem)]">
+<nav class="flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-full text-on-secondary-container hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">home_health</span>
+<span class="font-body-md text-body-md">许愿池</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-full text-on-secondary-container hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-body-md text-body-md">许愿</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-full text-on-secondary-container hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-body-md text-body-md">菜库</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-full bg-primary-container text-on-primary-container font-bold shadow-[0_-4px_20px_0_rgba(169,55,31,0.05)]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+<span class="font-body-md text-body-md">记录</span>
+</a>
+</nav>
+</aside>
+<!-- Content Area -->
+<div class="flex-1 max-w-[800px]">
+<!-- Header section -->
+<section class="mb-xl">
+<h1 class="font-display-lg text-display-lg text-on-background mb-xs">兑现记录</h1>
+<p class="font-body-lg text-body-lg text-secondary">每顿饭都留下一点有用的记忆。</p>
+</section>
+<!-- Timeline List -->
+<section>
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-tertiary-container">schedule</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">最近7天</h2>
+</div>
+<div class="space-y-lg relative before:absolute before:inset-y-0 before:left-4 md:before:left-8 before:w-[2px] before:bg-surface-variant before:-z-10 pl-10 md:pl-16">
+<!-- Record Card 1 -->
+<article class="relative bg-surface-container-lowest rounded-xl p-md md:p-lg flex flex-col md:flex-row gap-md border border-surface-variant shadow-[0_4px_24px_0_rgba(169,55,31,0.03)] hover:-translate-y-1 transition-transform duration-300">
+<!-- Timeline Node Marker -->
+<div class="absolute left-[-24px] md:left-[-36px] top-8 w-3 h-3 rounded-full bg-primary ring-4 ring-background z-10"></div>
+<div class="w-full md:w-48 aspect-[4/3] rounded-lg overflow-hidden shrink-0 bg-surface-container-high" data-alt="A warm, inviting close-up of a beautifully plated braised chicken dish (Hongshao Jigao) on a minimalist ceramic plate. The lighting is soft morning sunlight streaming across a wooden dining table, creating gentle shadows. The aesthetic is modern minimalist with warm tonal layers, emphasizing home-cooked comfort. High quality food photography, soft focus background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBi1JHlsU-HtVb46HfMAjplwOu7WrUbMPZ0lnwTTQLYkp_MmS6x05cT3YT72LEvqqfMn0jg5wcAUpszWbzErpqv6HDzZqrDCJlIPw1GKWmcFwAy8JhWr_bRabxttVXPvIPfciV8Y8tM0Sy0_AGgSnafffo6ssEtZ9aaeRcm0_eyynA2oUveuxU7M92Xa1JaxyyyKvPeXBqZoD-mg-6rkBnKXZQT0VYdpl-rODs4ArKd1kzfko3vwCFB5Q'); background-size: cover; background-position: center;"></div>
+<div class="flex flex-col justify-between flex-1 py-xs">
+<div>
+<div class="flex justify-between items-start mb-sm">
+<h3 class="font-headline-lg text-headline-lg text-on-surface">红烧鸡腿</h3>
+<span class="font-label-md text-label-md text-secondary">昨天 19:30</span>
+</div>
+<div class="flex flex-wrap gap-sm mt-sm">
+<span class="inline-flex items-center gap-xs font-label-md text-label-md bg-primary-container/40 text-on-primary-container px-3 py-1.5 rounded-full border border-primary-container/20">
+<span class="material-symbols-outlined text-[14px]">face</span> 我实现
+                                    </span>
+<span class="inline-flex items-center gap-xs font-label-md text-label-md bg-tertiary-container/30 text-on-tertiary-container px-3 py-1.5 rounded-full border border-tertiary-container/20">
+<span class="material-symbols-outlined text-[14px]">cleaning_services</span> 她洗碗和拖地
+                                    </span>
+<span class="inline-flex items-center gap-xs font-label-md text-label-md bg-secondary-container/50 text-on-secondary-container px-3 py-1.5 rounded-full border border-secondary-container/20">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">favorite</span> 已加入常吃菜
+                                    </span>
+</div>
+</div>
+</div>
+</article>
+<!-- Record Card 2 -->
+<article class="relative bg-surface-container-lowest rounded-xl p-md md:p-lg flex flex-col md:flex-row gap-md border border-surface-variant shadow-[0_4px_24px_0_rgba(169,55,31,0.03)] hover:-translate-y-1 transition-transform duration-300">
+<!-- Timeline Node Marker -->
+<div class="absolute left-[-24px] md:left-[-36px] top-8 w-3 h-3 rounded-full bg-outline-variant ring-4 ring-background z-10"></div>
+<div class="w-full md:w-48 aspect-[4/3] rounded-lg overflow-hidden shrink-0 bg-surface-container-high" data-alt="A steaming bowl of comforting tomato egg noodle soup on a clean, light-colored table setting. The colors are soft and warm, featuring the bright red of tomatoes and yellow of eggs against a creamy white ceramic bowl. The lighting suggests a relaxed evening at home. The style is modern minimalist, emphasizing a cozy, domestic atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFwInvRPjarn8RUGj6YHp_ZNF94RZubvb4FLMKIqJatkSauqAh7C8h9QI1tcYPqlHIrMjq2gxtCDY8ZzKNA0WhYjRw4IUpGk1nYNI7IIXsAtQjLtIyoJpVhDl5-86YFz2tpbrjYQduMRbEdlyn9B8BpzjkT0FBZM7-GCLC-PVgEQBevFoshhYeoE8oJbaMURU6bExdDEgDrnv-MXG0m3zOEK9BtcLzUBzLX_Mj0nNx9xXn45tr2Uk5Rw'); background-size: cover; background-position: center;"></div>
+<div class="flex flex-col justify-between flex-1 py-xs">
+<div>
+<div class="flex justify-between items-start mb-sm">
+<h3 class="font-headline-lg text-headline-lg text-on-surface">番茄鸡蛋面</h3>
+<span class="font-label-md text-label-md text-secondary">3天前 12:15</span>
+</div>
+<div class="flex flex-wrap gap-sm mt-sm">
+<span class="inline-flex items-center gap-xs font-label-md text-label-md bg-primary-container/40 text-on-primary-container px-3 py-1.5 rounded-full border border-primary-container/20">
+<span class="material-symbols-outlined text-[14px]">face_3</span> 她实现
+                                    </span>
+<span class="inline-flex items-center gap-xs font-label-md text-label-md bg-surface-variant text-on-surface-variant px-3 py-1.5 rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px]">wb_sunny</span> 适合工作日
+                                    </span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-surface-container-lowest rounded-t-xl shadow-[0_-4px_20px_0_rgba(169,55,31,0.05)]">
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:opacity-80" href="#">
+<span class="material-symbols-outlined mb-1">home_health</span>
+<span class="font-label-md text-label-md">许愿池</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:opacity-80" href="#">
+<span class="material-symbols-outlined mb-1">add_circle</span>
+<span class="font-label-md text-label-md">许愿</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:opacity-80" href="#">
+<span class="material-symbols-outlined mb-1">menu_book</span>
+<span class="font-label-md text-label-md">菜库</span>
+</a>
+<!-- Active Tab: 记录 -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 hover:opacity-80 scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+<span class="font-label-md text-label-md font-bold">记录</span>
+</a>
+</nav>
+</body></html>

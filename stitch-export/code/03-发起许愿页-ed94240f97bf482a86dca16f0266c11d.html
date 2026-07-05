@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>厨房许愿池 - 许个愿</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter,+PingFang+SC:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        /* Fallback fonts if config fails to load properly */
+        body { font-family: "Inter", "PingFang SC", sans-serif; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#ffb4a4",
+                        "on-tertiary-fixed": "#0b1f18",
+                        "on-error": "#ffffff",
+                        "secondary": "#505f76",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container-highest": "#f5ddd9",
+                        "surface-tint": "#a9371f",
+                        "inverse-primary": "#ffb4a4",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#b5ccc1",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#fbe3de",
+                        "background": "#fff8f6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#3d0500",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#f5ddd9",
+                        "on-secondary-container": "#54647a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#a9371f",
+                        "inverse-on-surface": "#ffede9",
+                        "outline": "#8c716b",
+                        "secondary-container": "#d0e1fb",
+                        "primary-container": "#f06a4d",
+                        "surface-dim": "#ecd5d0",
+                        "surface-bright": "#fff8f6",
+                        "surface-container-low": "#fff0ed",
+                        "primary-fixed": "#ffdad3",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "outline-variant": "#dfbfb9",
+                        "on-primary-container": "#5c0c00",
+                        "on-surface": "#251916",
+                        "tertiary-container": "#82988e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#881f08",
+                        "surface-container": "#ffe9e5",
+                        "on-tertiary-container": "#1c3029",
+                        "tertiary": "#4e635a",
+                        "on-surface-variant": "#58413c",
+                        "surface": "#fff8f6",
+                        "inverse-surface": "#3b2d2a",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "tertiary-fixed": "#d1e8dd",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-background": "#251916",
+                        "on-tertiary-fixed-variant": "#374b43"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "md": "16px",
+                        "base": "8px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "12px",
+                        "margin-mobile": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["\"Inter, PingFang SC\""],
+                        "body-sm": ["\"Inter, PingFang SC\""],
+                        "headline-lg": ["\"Inter, PingFang SC\""],
+                        "headline-md": ["\"Inter, PingFang SC\""],
+                        "label-md": ["\"Inter, PingFang SC\""],
+                        "display-lg": ["\"Inter, PingFang SC\""],
+                        "body-lg": ["\"Inter, PingFang SC\""]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom styles for animations and hidden scrollbars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Chip selection transition */
+        .chip-transition {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Subtle shadow for floating elements */
+        .shadow-soft {
+            box-shadow: 0 8px 30px rgba(169, 55, 31, 0.04);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen font-body-md antialiased pb-24 md:pb-0">
+<!-- Top App Bar (From JSON, Intent mapped to Intent match/fallback) -->
+<!-- Suppressed TopAppBar standard navigation structure, replacing with a custom header for a focused "Task/Transactional" screen as per Semantic Shell Mandate (Task-focused page implies departure from global nav) -->
+<header class="sticky top-0 z-40 bg-background/90 backdrop-blur-md flex justify-between items-center w-full px-margin-mobile h-16">
+<button aria-label="返回" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+<div class="font-headline-md text-headline-md text-primary font-bold">许个愿</div>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-screen-md mx-auto px-margin-mobile pt-sm pb-xl flex flex-col gap-lg">
+<!-- Header Text -->
+<section class="mb-sm">
+<h1 class="font-display-lg text-display-lg text-on-background mb-xs">说出想吃的，</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">也带上一点搭把手。</p>
+</section>
+<!-- Main Input: What to eat -->
+<section class="relative bg-surface-container-lowest rounded-xl p-md shadow-soft border border-surface-container-high focus-within:border-primary-fixed-dim transition-colors">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-base uppercase tracking-wider" for="food-wish">想吃什么</label>
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary-fixed-dim" style="font-variation-settings: 'FILL' 0;">restaurant</span>
+<input class="w-full bg-transparent border-none p-0 font-headline-md text-headline-md text-on-background placeholder:text-outline-variant focus:ring-0" id="food-wish" placeholder="如：可乐鸡翅" type="text"/>
+</div>
+</section>
+<!-- Bento Grid for Options -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Wanted Feeling (Single/Multi Select) -->
+<section class="bg-surface-container-lowest rounded-xl p-md shadow-soft">
+<h2 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">mood</span> 想要的味觉
+                </h2>
+<div class="flex flex-wrap gap-sm">
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">下饭一点</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">热乎一点</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">清淡一点</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">有汤</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">有肉</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">简单点</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high" data-group="feeling">想吃面</button>
+</div>
+</section>
+<!-- When to eat (Single Select) -->
+<section class="bg-surface-container-lowest rounded-xl p-md shadow-soft">
+<h2 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">calendar_month</span> 希望什么时候吃
+                </h2>
+<div class="flex flex-wrap gap-sm">
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="when">今晚</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="when">明天</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="when">这周</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="when">周末</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="when">有空再说</button>
+</div>
+</section>
+<!-- Wish Intensity (Single Select) -->
+<section class="bg-surface-container-lowest rounded-xl p-md shadow-soft md:col-span-2">
+<h2 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">favorite</span> 愿望强度
+                </h2>
+<div class="flex flex-wrap gap-sm">
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="intensity">随口一想</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="intensity">今天想吃</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="intensity">这周想吃</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="intensity">今天特别想吃</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-low text-on-surface-variant border border-transparent chip-transition hover:bg-surface-container-high single-select" data-group="intensity">周末认真安排</button>
+</div>
+</section>
+<!-- I want to help (Multi Select) - Highlighted Section -->
+<section class="bg-surface-container-low rounded-xl p-md shadow-soft md:col-span-2 border border-surface-variant relative overflow-hidden">
+<!-- Decorative element -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-container opacity-10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+<h2 class="font-label-md text-label-md text-primary mb-sm uppercase tracking-wider flex items-center gap-xs relative z-10">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">handshake</span> 我愿意搭把手
+                </h2>
+<div class="flex flex-wrap gap-sm relative z-10">
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">洗碗</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">拖地</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">买菜</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">洗菜</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">备菜</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">收拾厨房</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">倒垃圾</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">饭后收桌</button>
+<button class="chip-btn px-4 py-2 rounded-full font-body-sm text-body-sm bg-surface-container-lowest text-on-surface-variant border border-surface-variant chip-transition hover:bg-surface-container-high" data-group="help">陪你一起做</button>
+</div>
+</section>
+</div>
+<!-- Note Textarea -->
+<section class="bg-surface-container-lowest rounded-xl p-md shadow-soft mt-sm">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs flex items-center gap-xs" for="note">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">edit_note</span> 悄悄话
+            </label>
+<textarea class="w-full bg-transparent border-none p-0 font-body-sm text-body-sm text-on-background placeholder:text-outline-variant focus:ring-0 resize-none" id="note" placeholder="如果今天累了，简单吃也可以。" rows="2"></textarea>
+</section>
+<!-- Spacer for bottom button -->
+<div class="h-24"></div>
+</main>
+<!-- Fixed Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile bg-gradient-to-t from-background via-background/95 to-transparent pt-xl z-30">
+<div class="max-w-screen-md mx-auto">
+<button class="w-full bg-primary-container text-on-primary-container hover:opacity-90 active:scale-95 transition-all duration-300 rounded-full py-4 font-headline-md text-headline-md flex justify-center items-center gap-sm shadow-[0_8px_24px_rgba(240,106,77,0.25)]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+                丢进许愿池
+            </button>
+</div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chips = document.querySelectorAll('.chip-btn');
+            
+            // Active styles for chips based on Design System (Tertiary/Primary overlay, 40% opacity feel)
+            const activeClasses = ['bg-primary-container/20', 'text-primary', 'border-primary-fixed-dim'];
+            const inactiveClasses = ['bg-surface-container-low', 'text-on-surface-variant', 'border-transparent'];
+            const helpActiveClasses = ['bg-primary-container/30', 'text-on-primary-container', 'border-primary-container'];
+            const helpInactiveClasses = ['bg-surface-container-lowest', 'text-on-surface-variant', 'border-surface-variant'];
+
+            chips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const group = this.dataset.group;
+                    const isSingleSelect = this.classList.contains('single-select');
+                    const isHelpGroup = group === 'help';
+
+                    if (isSingleSelect) {
+                        // Deselect others in the same group
+                        const siblings = document.querySelectorAll(`.chip-btn[data-group="${group}"]`);
+                        siblings.forEach(sib => {
+                            if (sib !== this) {
+                                sib.classList.remove(...activeClasses);
+                                sib.classList.add(...inactiveClasses);
+                            }
+                        });
+                    }
+
+                    // Toggle current chip
+                    if (isHelpGroup) {
+                        if (this.classList.contains(helpActiveClasses[0])) {
+                            this.classList.remove(...helpActiveClasses);
+                            this.classList.add(...helpInactiveClasses);
+                        } else {
+                            this.classList.remove(...helpInactiveClasses);
+                            this.classList.add(...helpActiveClasses);
+                        }
+                    } else {
+                        if (this.classList.contains(activeClasses[0])) {
+                            if (!isSingleSelect) { // Allow deselect for multi-select
+                                this.classList.remove(...activeClasses);
+                                this.classList.add(...inactiveClasses);
+                            }
+                        } else {
+                            this.classList.remove(...inactiveClasses);
+                            this.classList.add(...activeClasses);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body></html>
